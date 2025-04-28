@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("APMD.Data")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+04495f4bce4d6439144a8ceb2e98f622b87368f3")]
 [assembly: System.Reflection.AssemblyProductAttribute("APMD.Data")]
 [assembly: System.Reflection.AssemblyTitleAttribute("APMD.Data")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

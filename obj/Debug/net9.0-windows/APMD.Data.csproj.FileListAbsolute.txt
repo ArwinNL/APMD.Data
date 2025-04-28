@@ -11,3 +11,4 @@ I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\APMD.Data.dll
 I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\refint\APMD.Data.dll
 I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\APMD.Data.pdb
 I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\ref\APMD.Data.dll
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\APMD.Data.sourcelink.json
