@@ -56,26 +56,6 @@ namespace APMD.Data
         public int Delete(int id) =>
             _db.Execute("DELETE FROM Photo WHERE PK_PHOTO_ID = @id", new { id });
 
-        public Photo GetForSet(Sets set)
-        {
-            set.Photos = GetSetPhotos(set.PK_SET_ID);
-            if (set.FK_PHOTO_ID == -1)
-            {
-                if (set.Photos != null && set.Photos.Count > 0)
-                {
-                    set.SetPhoto = set.Photos.First();
-                    return set.SetPhoto;
-                }
-            }
-            else
-            {
-                set.SetPhoto = GetById(set.FK_PHOTO_ID ?? 0);
-                return set.SetPhoto;
-            }
-            //set.Photos = _db.Query<Photo>(sqlSetSelect, new { set.PK_SET_ID }).AsList();
-            return null;
-        }
-
         public List<Photo> GetSetPhotos(int keySet)
         {
             var result = _db.Query<Photo>(sqlSetSelect, new { FK_SET_ID = keySet }).AsList();

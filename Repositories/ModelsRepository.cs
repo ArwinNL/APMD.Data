@@ -35,6 +35,8 @@ namespace APMD.Data
 
         const string sql_selectForSet = @"SELECT m.* FROM SetModels sm INNER JOIN Models m ON sm.FK_MODEL_ID = m.PK_MODEL_ID WHERE sm.FK_SET_ID = @id";
 
+        const string sql_icg = @"SELECT m.* FROM Models m WHERE m.ICG = @icg";
+
         private readonly IDbConnection _db;
 
         public ModelsRepository(string connectionString)
@@ -42,30 +44,39 @@ namespace APMD.Data
             _db = new MySqlConnection(connectionString);
         }
 
-        public IEnumerable<Models> GetAll() =>
-            _db.Query<Models>("SELECT * FROM Models");
-
-        public Models GetById(int id)
+        public Task<IEnumerable<Model>> GetAll()
         {
-            var result = _db.QueryFirstOrDefault<Models>("SELECT * FROM Models WHERE PK_MODEL_ID = @id", new { id });
+            var models = _db.QueryAsync<Model>("SELECT * FROM Models ORDER BY Name Asc");
+            return models;
+        }
+
+        public Model GetById(int id)
+        {
+            var result = _db.QueryFirstOrDefault<Model>("SELECT * FROM Models WHERE PK_MODEL_ID = @id", new { id });
             if (result == null)
                 throw new KeyNotFoundException($"Model with ID {id} not found.");
             result.MainModel = result.FK_MAIN_MODEL_ID != null ? GetById(result.FK_MAIN_MODEL_ID.Value) : null;
             return result;
         }
 
-        public int Insert(Models item) =>
+        public List<Model> GetByICG(string icg)
+        {
+            var result = _db.Query<Model>(sql_icg, new { icg });
+            return result.AsList();
+        }
+
+        public int Insert(Model item) =>
             _db.Execute(sql_insert, item);
 
-        public int Update(Models item) =>
+        public int Update(Model item) =>
             _db.Execute(sql_update, item);
 
         public int Delete(int id) =>
             _db.Execute(sql_delete, new { id });
 
-        internal List<Models> GetAllForSet(int id)
+        internal List<Model> GetAllForSet(int id)
         {
-            var result = _db.Query<Models>(sql_selectForSet, new {id });
+            var result = _db.Query<Model>(sql_selectForSet, new {id });
             return result.AsList();
         }
     }

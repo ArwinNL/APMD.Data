@@ -5,7 +5,7 @@ namespace APMD.Data
     public class DiskCollection
     {
         private DisksRepository _disksRepository;
-        public List<Disks> Disks { get; set; } = new List<Disks>();
+        public List<Disk> Disks { get; set; } = new List<Disk>();
 
         public DiskCollection(string connectionString)
         {
@@ -20,7 +20,7 @@ namespace APMD.Data
 
     }
 
-    public class Disks
+    public class Disk
     {
         public int PK_DISK_ID { get; set; }
         public required string Name { get; set; }

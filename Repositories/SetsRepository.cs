@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using APMD.Data.Models;
 using Dapper;
 using Dapper.Mapper;
+using Microsoft.VisualBasic.ApplicationServices;
 using MySqlConnector;
 using static System.ComponentModel.Design.ObjectSelectorEditor;
 
@@ -60,31 +62,31 @@ namespace APMD.Data
         {
             _db = new MySqlConnection(connectionString);
         }
-        public async Task<IEnumerable<Sets>> GetAll()
+        public async Task<IEnumerable<Set>> GetAll()
         {
             //public IEnumerable<Sets> GetAll() =>
-            var sets = await _db.QueryAsync<Sets, Models, Sets>("SELECT s.*, sm FROM Sets s INNER JOIN SetModels sm on sm.FK_SET_ID = s.PK_SET_ID INNER JOIN Models m ON m.PK_MODEL_ID = sm.FK_MODEL_ID"
+            var sets = await _db.QueryAsync<Set, Model, Set>("SELECT s.*, sm FROM Sets s INNER JOIN SetModels sm on sm.FK_SET_ID = s.PK_SET_ID INNER JOIN Models m ON m.PK_MODEL_ID = sm.FK_MODEL_ID"
                 , (set, model) => { set.Models.Add(model);
                     return set;
                 }, splitOn: "");
             return sets;
         }
 
-        public IEnumerable<Sets> GetAllForModel(int keyModel) =>
-            _db.Query<Sets>(sql_for_model, new { keyModel });
+        public IEnumerable<Set> GetAllForModel(int keyModel) =>
+            _db.Query<Set>(sql_for_model, new { keyModel });
 
-        public Sets GetById(int id)
+        public Set GetById(int id)
         {
-            var result = _db.QueryFirstOrDefault<Sets>("SELECT * FROM Sets WHERE PK_SET_ID = @id", new { id });
+            var result = _db.QueryFirstOrDefault<Set>("SELECT * FROM Sets WHERE PK_SET_ID = @id", new { id });
             if (result == null)
                 throw new KeyNotFoundException($"Set with ID {id} not found.");
             return result;
         }
 
-        public int Insert(Sets item) =>
+        public int Insert(Set item) =>
             _db.Execute(sql_insert, item);
 
-        public int Update(Sets item)
+        public int Update(Set item)
         {
             _db.Open();
             var transaction = _db.BeginTransaction();
@@ -106,9 +108,20 @@ namespace APMD.Data
         public int Delete(int id) =>
             _db.Execute("DELETE FROM Sets WHERE PK_SET_ID = @id", new { id });
 
-        public Photo? LoadPhoto(Sets sets)
+        public Photo? LoadPhoto(Set sets)
         {
             throw new NotImplementedException();
+        }
+
+        public SetTags AddTagToSet(Tag tag, Set set) 
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("@PK_SET_ID", set.PK_SET_ID);
+            parameters.Add("@PK_TAG_ID", tag.PK_TAG_ID);
+
+            _db.Execute("INSERT INTO SetTags (FK_SET_ID, FK_TAG_ID) VALUES (@PK_SET_ID, @PK_TAG_ID)", parameters);
+            var setTags = _db.QuerySingle<SetTags>("SELECT * FROM SetTags WHERE FK_SET_ID = @PK_SET_ID AND FK_TAG_ID = @PK_TAG_ID", parameters);
+            return setTags;
         }
     }
 }

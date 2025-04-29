@@ -1,3 +1,4 @@
+using Serilog;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -16,10 +17,10 @@ namespace APMD.Data
         public int FK_DISK_ID { get; set; }
 
         [ForeignKey("FK_DISK_ID")]
-        public Disks? Disk {  get; set; }
+        public Disk? Disk {  get; set; }
 
         [ForeignKey("FK_SET_ID")]
-        public Sets? Set { get; set; }
+        public Set? Set { get; set; }
 
         [NotMapped]
         public string FileName => $"APD{PK_PHOTO_ID:000000000000}";
@@ -36,7 +37,19 @@ namespace APMD.Data
             {
                 if (Stored)
                 {
-                    return Image.FromFile(PhotoFile);
+                    try
+                    {
+                        var result = Image.FromFile(PhotoFile);
+                        result.Tag = this;
+                        return result;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handle the exception (e.g., log it, show a message, etc.)
+                        Log.Error($"Image not found: {ex.Message}");
+                        MessageBox.Show($"Image not found: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return null;
+                    }
                 }
                 else
                 {

@@ -6,7 +6,7 @@ namespace APMD.Data
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
 
-    public class Models
+    public class Model
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -21,9 +21,12 @@ namespace APMD.Data
         public Photo? ModelPhoto { get; set; }
 
         [ForeignKey("FK_MAIN_MODEL_ID")]
-        public Models? MainModel { get; set; }
+        public Model? MainModel { get; set; }
 
         [NotMapped]
-        public List<Sets> Sets { get; set; } = new List<Sets>();
+        public List<Set> Sets { get; set; } = new List<Set>();
+
+        [NotMapped]
+        public List<Model> Models { get; set; } = new List<Model>();
     }
 }

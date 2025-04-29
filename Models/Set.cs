@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace APMD.Data
 {
     [Table("Sets")]
-    public class Sets
+    public class Set
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -23,8 +23,12 @@ namespace APMD.Data
         public Photo? SetPhoto{ get; set; }
 
         [ForeignKey("FK_SET_ID")]
-        public List<Models> Models { get; set; }
+        public List<Model> Models { get; set; }
 
-        public ICollection<Photo> Photos { get; set; }
+        [NotMapped]
+        public List<Photo> Photos { get; set; } = new List<Photo>();
+
+        [NotMapped]
+        public List<Tag> Tags { get; set; } = new List<Tag>();
     }
 }
