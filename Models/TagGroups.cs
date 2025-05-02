@@ -5,12 +5,18 @@ namespace APMD.Data
 {
     public class TagGroups
     {
-        public int PK_TAGGROUP_ID { get; set; }
+        public required int PK_TAGGROUP_ID { get; set; }
         public required string Name { get; set; }
-        public required string Description { get; set; }
         public int? FK_PHOTO_ID { get; set; }
+        public int? FK_MAIN_TAGGROUP_ID { get; set; }
 
         [NotMapped]
-        public ICollection<Tag> Tags = new Collection<Tag>();
+        public ObservableCollection<Tag> Tags { get; set; } = new();
+
+        [NotMapped]
+        public TagGroups? MainTagGroup { get; set; }
+
+        [NotMapped]
+        public Photo? Photo { get; set; }
     }
 }

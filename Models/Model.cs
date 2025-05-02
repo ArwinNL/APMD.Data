@@ -8,6 +8,7 @@ namespace APMD.Data
 
     public class Model
     {
+        private string? _icg;
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PK_MODEL_ID { get; set; }
@@ -15,7 +16,17 @@ namespace APMD.Data
         public int? FK_MAIN_MODEL_ID { get; set; }
         public int? FK_PHOTO_ID { get; set; }
         public required short Rank { get; set; }
-        public string? ICG { get; set; }
+        public string? ICG
+        {
+            get => _icg ?? "";
+            set 
+            {  
+                if (value == null || value == "NULL")
+                    _icg = "";
+                else
+                    _icg = value; 
+            }
+        }
 
         [ForeignKey("FK_PHOTO_ID")]
         public Photo? ModelPhoto { get; set; }

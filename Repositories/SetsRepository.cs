@@ -56,13 +56,23 @@ namespace APMD.Data
             WHERE 
                 sm.FK_MODEL_ID = @keyModel";
 
+        const string sql_deletereference = @"
+            DELETE 
+            FROM 
+                SetTags 
+            WHERE 
+                FK_SET_ID = @FK_SET_ID 
+                AND 
+                FK_TAG_ID = @FK_TAG_ID
+            ";
+
         private readonly IDbConnection _db;
 
-        public SetsRepository(string connectionString)
+        internal SetsRepository(string connectionString)
         {
             _db = new MySqlConnection(connectionString);
         }
-        public async Task<IEnumerable<Set>> GetAll()
+        internal async Task<IEnumerable<Set>> GetAll()
         {
             //public IEnumerable<Sets> GetAll() =>
             var sets = await _db.QueryAsync<Set, Model, Set>("SELECT s.*, sm FROM Sets s INNER JOIN SetModels sm on sm.FK_SET_ID = s.PK_SET_ID INNER JOIN Models m ON m.PK_MODEL_ID = sm.FK_MODEL_ID"
@@ -72,10 +82,10 @@ namespace APMD.Data
             return sets;
         }
 
-        public IEnumerable<Set> GetAllForModel(int keyModel) =>
+        internal IEnumerable<Set> GetAllForModel(int keyModel) =>
             _db.Query<Set>(sql_for_model, new { keyModel });
 
-        public Set GetById(int id)
+        internal Set GetById(int id)
         {
             var result = _db.QueryFirstOrDefault<Set>("SELECT * FROM Sets WHERE PK_SET_ID = @id", new { id });
             if (result == null)
@@ -83,37 +93,31 @@ namespace APMD.Data
             return result;
         }
 
-        public int Insert(Set item) =>
+        internal int Insert(Set item) =>
             _db.Execute(sql_insert, item);
 
-        public int Update(Set item)
+        internal int Update(Set item)
         {
-            _db.Open();
-            var transaction = _db.BeginTransaction();
             try
             {
                 var result = _db.Execute(sql_update, item);
                 if (result == 0)
                     throw new KeyNotFoundException($"Set with ID {item.PK_SET_ID} not found.");
-                transaction.Commit();
                 return result;
             }
             catch (DbException ex)
             {
-                transaction.Rollback();
                 throw new Exception("Error updating the set.", ex);
             }
         }
 
-        public int Delete(int id) =>
+        internal int Delete(int id) =>
             _db.Execute("DELETE FROM Sets WHERE PK_SET_ID = @id", new { id });
 
-        public Photo? LoadPhoto(Set sets)
-        {
-            throw new NotImplementedException();
-        }
 
-        public SetTags AddTagToSet(Tag tag, Set set) 
+
+        // SetTags CRUD
+        internal SetTags AddTagToSet(Tag tag, Set set)
         {
             var parameters = new DynamicParameters();
             parameters.Add("@PK_SET_ID", set.PK_SET_ID);
@@ -123,5 +127,13 @@ namespace APMD.Data
             var setTags = _db.QuerySingle<SetTags>("SELECT * FROM SetTags WHERE FK_SET_ID = @PK_SET_ID AND FK_TAG_ID = @PK_TAG_ID", parameters);
             return setTags;
         }
+
+        internal int DeleteReference(int keyTag, int keySet) => 
+            _db.Execute(sql_deletereference, new { FK_SET_ID = keySet, FK_TAG_ID = keyTag });
+        internal int DeleteReference(Tag tag, Set currentSet) => 
+            DeleteReference(tag.PK_TAG_ID, currentSet.PK_SET_ID);
+        internal int DeleteReference(SetTags setTags) => 
+            DeleteReference(setTags.FK_TAG_ID, setTags.FK_SET_ID);
+
     }
 }

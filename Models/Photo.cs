@@ -6,15 +6,16 @@ namespace APMD.Data
 {
     public class Photo
     {
-        public int PK_PHOTO_ID { get; set; }
+        public required int PK_PHOTO_ID { get; set; }
         public required string OriginalFilename { get; set; }
         public required string Description { get; set; }
         public string? OriginalFolder { get; set; }
         public string? Extension { get; set; }
         public int? FK_SET_ID { get; set; }
-        public bool Stored { get; set; }
-        public bool Archived { get; set; }
-        public int FK_DISK_ID { get; set; }
+        public int? Order { get; set; }
+        public required bool Stored { get; set; }
+        public required bool Archived { get; set; }
+        public required int FK_DISK_ID { get; set; }
 
         [ForeignKey("FK_DISK_ID")]
         public Disk? Disk {  get; set; }

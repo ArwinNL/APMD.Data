@@ -50,8 +50,22 @@ namespace APMD.Data
         public int Insert(Photo item) =>
             _db.Execute("INSERT INTO Photo (...) VALUES (...)" /* TODO: Fill columns */, item);
 
-        public int Update(Photo item) =>
-            _db.Execute("UPDATE Photo SET ... WHERE PK_PHOTO_ID = @PK_PHOTO_ID" /* TODO: Fill columns */, item);
+        public int Update(Photo item)
+        {
+            const string sql_photo_update = @"
+                UPDATE 
+                    Photo 
+                SET 
+                    FK_DISK_ID = @FK_DISK_ID,
+                    FK_SET_ID = @FK_SET_ID,
+                    Stored = @Stored,
+                    Archived = @Archived,
+                    `Order` = @Order
+                WHERE 
+                    PK_PHOTO_ID = @PK_PHOTO_ID";
+            var result = _db.Execute(sql_photo_update, item);
+            return result;
+        }
 
         public int Delete(int id) =>
             _db.Execute("DELETE FROM Photo WHERE PK_PHOTO_ID = @id", new { id });
