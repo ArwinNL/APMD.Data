@@ -13,24 +13,27 @@ namespace APMD.Data
 {
     public class SetsRepository
     {
-        const string sql_insert = @"INSERT INTO Sets
-            (
-                FK_WEBSITE_ID,
-                Title,
-                Set_identifier,
-                FK_PHOTO_ID,
-                Archived,
-                Tagged
-            )
+        const string sql_insert = @"
+            INSERT INTO 
+            Sets
+                (
+                    FK_WEBSITE_ID,
+                    Title,
+                    Set_identifier,
+                    FK_PHOTO_ID,
+                    Archived,
+                    Tagged
+                )
             VALUES
-            (
-                @FK_WEBSITE_ID,
-                @Title,
-                @Set_identifier,
-                @FK_PHOTO_ID
-                @Archived,
-                @Tagged
-            );";
+                (
+                    @FK_WEBSITE_ID,
+                    @Title,
+                    @Set_identifier,
+                    @FK_PHOTO_ID
+                    @Archived,
+                    @Tagged
+                );
+            ";
 
         const string sql_update = @"UPDATE Sets
             SET 

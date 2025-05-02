@@ -19,6 +19,42 @@ namespace APMD.Data
                 p.FK_SET_ID = @FK_SET_ID
             ";
 
+        const string sql_photo_update = @"
+                UPDATE 
+                    Photo 
+                SET 
+                    FK_DISK_ID = @FK_DISK_ID,
+                    FK_SET_ID = @FK_SET_ID,
+                    Stored = @Stored,
+                    Archived = @Archived,
+                    `Order` = @Order
+                WHERE 
+                    PK_PHOTO_ID = @PK_PHOTO_ID";
+
+        const string sql_photo_insert = @"
+                INSERT INTO 
+                    Photo
+                ( 
+                    OriginalFileName,
+                    OriginalFolder,
+                    FK_DISK_ID,
+                    FK_SET_ID,
+                    Stored,
+                    Archived,
+                    Extension,
+                    `Order`
+                )
+                VALUES 
+                ( 
+                    @OriginalFileName,
+                    @OriginalFolder,
+                    @FK_DISK_ID,
+                    @FK_SET_ID,
+                    @Stored,
+                    @Archived,
+                    @Extension,
+                    @Order
+                );";
 
         private readonly IDbConnection _db;
         private DiskCollection _diskCollection;
@@ -48,21 +84,10 @@ namespace APMD.Data
         }
 
         public int Insert(Photo item) =>
-            _db.Execute("INSERT INTO Photo (...) VALUES (...)" /* TODO: Fill columns */, item);
+            _db.Execute( sql_photo_insert, item);
 
         public int Update(Photo item)
         {
-            const string sql_photo_update = @"
-                UPDATE 
-                    Photo 
-                SET 
-                    FK_DISK_ID = @FK_DISK_ID,
-                    FK_SET_ID = @FK_SET_ID,
-                    Stored = @Stored,
-                    Archived = @Archived,
-                    `Order` = @Order
-                WHERE 
-                    PK_PHOTO_ID = @PK_PHOTO_ID";
             var result = _db.Execute(sql_photo_update, item);
             return result;
         }
