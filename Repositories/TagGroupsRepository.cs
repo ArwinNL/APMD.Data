@@ -14,7 +14,6 @@ namespace APMD.Data
                 TagGroups 
             SET 
                 Name = @Name,
-                Description = @Description,
                 FK_MAIN_TAGGROUP_ID = @FK_MAIN_TAGGROUP_ID,
                 FK_PHOTO_ID = @FK_PHOTO_ID
             WHERE 
@@ -22,9 +21,10 @@ namespace APMD.Data
 
         const string sql_insert = @"
             INSERT INTO 
-                TagGroups (Name, Description, FK_MAIN_TAGGROUP_ID, FK_PHOTO_ID)
+                TagGroups (Name, FK_MAIN_TAGGROUP_ID, FK_PHOTO_ID, Color)
             VALUES 
-                (@Name, @Description, @FK_MAIN_TAGGROUP_ID, @FK_PHOTO_ID)";
+                (@Name, @FK_MAIN_TAGGROUP_ID, @FK_PHOTO_ID, @Color);
+            SELECT LAST_INSERT_ID();";
 
         private readonly IDbConnection _db;
         private TagRepository _tagsRepository;
@@ -38,7 +38,7 @@ namespace APMD.Data
         public IEnumerable<TagGroups> GetAll() =>
             _db.Query<TagGroups>("SELECT * FROM TagGroups");
 
-        public IEnumerable<TagGroups> GetAllFull()
+        public ObservableCollection<TagGroups> GetAllFull()
         {
             var groups = GetAll();
             foreach (var group in groups)
@@ -50,11 +50,15 @@ namespace APMD.Data
         }
             
 
-        public TagGroups GetById(int id) =>
+        public TagGroups? GetById(int id) =>
             _db.QueryFirstOrDefault<TagGroups>("SELECT * FROM TagGroups WHERE PK_TAGGROUP_ID = @id", new { id });
 
-        public int Insert(TagGroups item) =>
-            _db.Execute(sql_insert, item);
+        public int Insert(TagGroups item)
+        {
+            var id = _db.ExecuteScalar<int> (sql_insert, item);
+            item.PK_TAGGROUP_ID = id;
+            return id;
+        }
 
         public int Update(TagGroups item) =>
             _db.Execute(sql_update, item);

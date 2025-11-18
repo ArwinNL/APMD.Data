@@ -1,0 +1,14 @@
+I:\git.github\APMD\APDM.Data\bin\Debug\net9.0\APMD.Data.dll.config
+I:\git.github\APMD\APDM.Data\bin\Debug\net9.0\APMD.Data.deps.json
+I:\git.github\APMD\APDM.Data\bin\Debug\net9.0\APMD.Data.dll
+I:\git.github\APMD\APDM.Data\bin\Debug\net9.0\APMD.Data.pdb
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\APMD.Data.csproj.AssemblyReference.cache
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\APMD.Data.GeneratedMSBuildEditorConfig.editorconfig
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\APMD.Data.AssemblyInfoInputs.cache
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\APMD.Data.AssemblyInfo.cs
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\APMD.Data.csproj.CoreCompileInputs.cache
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\APMD.Data.sourcelink.json
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\APMD.Data.dll
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\refint\APMD.Data.dll
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\APMD.Data.pdb
+I:\git.github\APMD\APDM.Data\obj\Debug\net9.0\ref\APMD.Data.dll

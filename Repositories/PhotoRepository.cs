@@ -1,10 +1,11 @@
 
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using Dapper;
 using Dapper.Mapper;
 using MySqlConnector;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using Z.Dapper.Plus;
 
 namespace APMD.Data
 {
@@ -23,7 +24,7 @@ namespace APMD.Data
                 UPDATE 
                     Photo 
                 SET 
-                    FK_DISK_ID = @FK_DISK_ID,
+                    FK_SERVERSHARE_ID = @FK_SERVERSHARE_ID,
                     FK_SET_ID = @FK_SET_ID,
                     Stored = @Stored,
                     Archived = @Archived,
@@ -37,7 +38,7 @@ namespace APMD.Data
                 ( 
                     OriginalFileName,
                     OriginalFolder,
-                    FK_DISK_ID,
+                    FK_SERVERSHARE_ID,
                     FK_SET_ID,
                     Stored,
                     Archived,
@@ -48,43 +49,56 @@ namespace APMD.Data
                 ( 
                     @OriginalFileName,
                     @OriginalFolder,
-                    @FK_DISK_ID,
+                    @FK_SERVERSHARE_ID,
                     @FK_SET_ID,
                     @Stored,
                     @Archived,
                     @Extension,
                     @Order
-                );";
+                );
+                SELECT LAST_INSERT_ID();";
 
         private readonly IDbConnection _db;
-        private DiskCollection _diskCollection;
+        private ServerShareCollection _serverShareCollection;
 
-        public PhotoRepository(string connectionString): this(new MySqlConnection(connectionString))
+        public PhotoRepository(string connectionString) : this(new MySqlConnection(connectionString))
         {
-            _diskCollection = new DiskCollection(connectionString);
+            _serverShareCollection = new ServerShareCollection(connectionString);
         }
 
         public PhotoRepository(System.Data.IDbConnection connection)
         {
             _db = connection;
-            _diskCollection = new DiskCollection(connection);
+            _serverShareCollection = new ServerShareCollection(connection);
         }
 
 
-        public IEnumerable<Photo> GetAll() =>
-            _db.Query<Photo>("SELECT * FROM Photo");
+        public IEnumerable<Photo> GetAll()
+        {
+            var result = _db.Query<Photo>("SELECT * FROM Photo");
+            result.ToList().ForEach(photo =>
+            {
+                photo.ServerShare = _serverShareCollection.ServerShares.First(ss => ss.PK_SERVERSHARE_ID == photo.FK_SERVERSHARE_ID);
+            });
+            return result;
+        }
 
-        public Photo GetById(int id)
+        public Photo? GetById(long id)
         {
             var photo = _db.QueryFirstOrDefault<Photo>("SELECT * FROM Photo WHERE PK_PHOTO_ID = @id", new { id });
 
-            if (photo != null) photo.Disk = _diskCollection.Disks.FirstOrDefault(d => d.PK_DISK_ID == photo.FK_DISK_ID);
+            if (photo != null)
+                photo.ServerShare = _serverShareCollection.ServerShares.First(ss => ss.PK_SERVERSHARE_ID == photo.FK_SERVERSHARE_ID);
 
             return photo;
         }
 
-        public int Insert(Photo item) =>
-            _db.Execute( sql_photo_insert, item);
+        public long Insert(Photo item)
+        {
+            item.PK_PHOTO_ID = _db.ExecuteScalar<int>(sql_photo_insert, item);
+            item.ServerShare = _serverShareCollection.ServerShares.First(ss => ss.PK_SERVERSHARE_ID == item.FK_SERVERSHARE_ID);
+            return item.PK_PHOTO_ID;
+        }
 
         public int Update(Photo item)
         {
@@ -92,17 +106,27 @@ namespace APMD.Data
             return result;
         }
 
-        public int Delete(int id) =>
+        public int Delete(long id) =>
             _db.Execute("DELETE FROM Photo WHERE PK_PHOTO_ID = @id", new { id });
 
-        public List<Photo> GetSetPhotos(int keySet)
+        public List<Photo> GetAllForSet(long keySet)
         {
             var result = _db.Query<Photo>(sqlSetSelect, new { FK_SET_ID = keySet }).AsList();
             foreach (var item in result)
             {
-                item.Disk = _diskCollection.Disks.FirstOrDefault((d => d.PK_DISK_ID == item.FK_DISK_ID));
+                item.ServerShare = _serverShareCollection.ServerShares.First((ss => ss.PK_SERVERSHARE_ID == item.FK_SERVERSHARE_ID));
             }
             return result;
+        }
+
+        internal void BulkUpdate(List<Photo> photos)
+        {
+            _db.BulkUpdate(photos);
+        }
+
+        internal void BulkInsert(List<Photo> photos)
+        {
+            _db.BulkInsert(photos);
         }
     }
 }

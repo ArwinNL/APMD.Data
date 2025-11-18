@@ -3,28 +3,38 @@
 namespace APMD.Data
 {
     using Dapper;
+    using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
+    using System.Threading.Tasks;
+    using Dapper.Contrib.Extensions;
 
-    public class Model
+
+    public class Model : INotifyPropertyChanged
     {
         private string? _icg;
-        [Key]
+
+        [Dapper.Contrib.Extensions.Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PK_MODEL_ID { get; set; }
-        public required string Name { get; set; }
+
+        public required string Name { get; set; } = string.Empty;
+
         public int? FK_MAIN_MODEL_ID { get; set; }
+
         public int? FK_PHOTO_ID { get; set; }
-        public required short Rank { get; set; }
+
+        public required short Rank { get; set; } = 0;
+
         public string? ICG
         {
             get => _icg ?? "";
-            set 
-            {  
+            set
+            {
                 if (value == null || value == "NULL")
                     _icg = "";
                 else
-                    _icg = value; 
+                    _icg = value;
             }
         }
 
@@ -39,5 +49,51 @@ namespace APMD.Data
 
         [NotMapped]
         public List<Model> Models { get; set; } = new List<Model>();
+
+        [NotMapped]
+        public int NumSets { get; set; }
+
+        [NotMapped]
+        public int NumPhotos { get; set; }
+
+        [NotMapped]
+        public int UniqueTagsInSets { get; set; }
+
+        [NotMapped]
+        public int ModelTags { get; set; }
+
+        [Computed]
+        public List<Websites> Websites { get; set; } = new List<Websites>();
+
+        public event PropertyChangedEventHandler? PropertyChanged; // Fix for CS8612: Make the event nullable to match the interface.
+
+        protected void OnPropertyChanged(string propName) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName)); // Ensure null-safe invocation.
+
+        public static async Task<Model> FromSummaryAsync(ModelSummary summary)
+        {
+            await Task.Delay(10); // Simulate I/O, remove or replace with real call
+
+            return new Model
+            {
+                PK_MODEL_ID = summary.PK_MODEL_ID,
+                Name = summary.Name,
+                NumSets = summary.NumSets,
+                UniqueTagsInSets = summary.UniqueTagsInSets,
+                ModelTags = summary.ModelTags,
+                Rank = summary.Rank
+            };
+        }
     }
+
+    public class ModelSummary
+    {
+        public int PK_MODEL_ID { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int NumSets { get; set; }
+        public int UniqueTagsInSets { get; set; }
+        public int ModelTags { get; set; }
+        public short Rank { get; set; }
+    }
+
 }
