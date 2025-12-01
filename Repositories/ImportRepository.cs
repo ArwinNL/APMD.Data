@@ -55,7 +55,8 @@ namespace APMD.Data
 
         public int Update(Import item)
         {
-            try             {
+            try             
+            {
                 return _db.Execute(sql_update, item);
             }
             catch (Exception ex)
@@ -69,6 +70,13 @@ namespace APMD.Data
             _db.QueryFirstOrDefault<Import>("SELECT * FROM Import WHERE PK_IMPORT_ID = @id", new { id });
 
         internal IEnumerable<Import> GetAllUnprocessed() => _db.Query<Import>("SELECT * FROM Import WHERE Processed = 0").ToList();
-        
+
+        internal void UpdateAll(List<Import> imports)
+        {
+            foreach (var import in imports)
+            {
+                Update(import);
+            }
+        }
     }
 }

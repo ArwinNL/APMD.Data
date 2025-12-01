@@ -35,6 +35,7 @@ namespace APMD.Data
                 {
                     var import = new Import(si);
                     _importRepository.Insert(import);
+                    si.Tag = import;
                 }
                 return true;
             }
@@ -62,6 +63,11 @@ namespace APMD.Data
         public void Insert(Import importSet)
         {
             _importRepository.Insert(importSet);
+        }
+
+        public void UpdateAll(List<ImportFolder> saveImport)
+        {
+            _importRepository.UpdateAll(saveImport.Select(i => (Import)i.Tag).ToList());
         }
     }
 

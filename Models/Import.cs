@@ -28,6 +28,7 @@ namespace APMD.Data
             SetName = importFolder.ImportSetName;
             FullPath = importFolder.FolderPath;
             FK_WEBSITE_ID = importFolder.Website?.PK_WEBSITE_ID ?? 0; // Assuming Website is a class with PK_WEBSITE_ID
+            PublishedAt = importFolder.FolderDate;
         }
     }
 }

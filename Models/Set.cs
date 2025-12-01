@@ -20,7 +20,7 @@ namespace APMD.Data
         public long? FK_PHOTO_ID { get; set; }
         public bool Archived { get; set; }
         public bool Tagged { get; set; }
-        public DateTime PublishedAt { get; set; }
+        public DateTime? PublishedAt { get; set; }
 
         
         [ForeignKey("FK_PHOTO_ID")]

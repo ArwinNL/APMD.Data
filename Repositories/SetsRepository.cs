@@ -284,9 +284,7 @@ namespace APMD.Data
                 SELECT
                     s.* 
                 FROM 
-                    Sets s
-                WHERE 
-                    s.Tagged = 0
+                    SetWithoutModels s
                 ",
                 new { pageSize, offset }
                 );
@@ -296,9 +294,7 @@ namespace APMD.Data
                 SELECT 
                     COUNT(*) 
                 FROM 
-                    Sets s
-                WHERE 
-                    s.Tagged = 0
+                    SetWithoutModels s
                 ");
 
             return new PagedResult<Set>(items.ToList(), offset, pageSize, total);

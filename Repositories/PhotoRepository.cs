@@ -18,6 +18,9 @@ namespace APMD.Data
                 Photo p 
             WHERE 
                 p.FK_SET_ID = @FK_SET_ID
+            ORDER BY
+                p.`OriginalFileName` ASC
+
             ";
 
         const string sql_photo_update = @"

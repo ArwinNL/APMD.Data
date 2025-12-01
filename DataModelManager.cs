@@ -198,6 +198,11 @@ namespace APMD.Data
             return result.Distinct().ToList(); // Remove duplicates if any
 
         }
+
+        public Photo? GetFirstPhoto(Model model)
+        {
+            return _dataManager.Photo.GetForModel(model);
+        }
     }
 
 
