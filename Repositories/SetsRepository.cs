@@ -149,6 +149,37 @@ namespace APMD.Data
             GROUP BY m.PK_MODEL_ID;
             ";
 
+        const string sql_select_double_sets = @"
+            SELECT 
+                s.*,
+                sm.FK_MODEL_ID
+            FROM Sets s
+            JOIN SetModels sm 
+                ON sm.FK_SET_ID = s.PK_SET_ID
+            JOIN (
+                SELECT 
+                    sm2.FK_MODEL_ID,
+                    s2.Title,
+                    s2.FK_WEBSITE_ID
+                FROM Sets s2
+                JOIN SetModels sm2 
+                    ON sm2.FK_SET_ID = s2.PK_SET_ID
+                GROUP BY 
+                    sm2.FK_MODEL_ID,
+                    s2.Title,
+                    s2.FK_WEBSITE_ID
+                HAVING COUNT(*) > 1
+            ) dup 
+                ON dup.FK_MODEL_ID   = sm.FK_MODEL_ID
+               AND dup.Title         = s.Title
+               AND dup.FK_WEBSITE_ID = s.FK_WEBSITE_ID
+            ORDER BY 
+                sm.FK_MODEL_ID,
+                s.FK_WEBSITE_ID,
+                s.Title,
+                s.PK_SET_ID;
+            ";
+
         private readonly IDbConnection _db;
 
         public SetsRepository(string connectionString)
@@ -299,6 +330,14 @@ namespace APMD.Data
 
             return new PagedResult<Set>(items.ToList(), offset, pageSize, total);
         }
+
+        public List<Set> GetDoubled()
+        {
+            var items = _db.Query<Set>(sql_select_double_sets).ToList();
+
+            return items;
+        }
+
 
         internal IEnumerable<Set> Search(string search)
         {

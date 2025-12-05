@@ -217,6 +217,11 @@ namespace APMD.Data
         {
             return _setsRepository.GetAllArchived();
         }
+
+        public List<Set> GetSetsWithDuplicateItems()
+        {
+            return _setsRepository.GetDoubled();
+        }
     }
 
 

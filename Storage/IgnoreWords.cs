@@ -9,15 +9,29 @@ namespace APMD.Data.Storage
 {
     public static class IgnoreWordsStorage
     {
-        private static readonly string filePath = Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "APDM"), "ignorewords.json");
+        private static readonly string folderPath =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "APDM");
+
+        private static readonly string filePath =
+            Path.Combine(folderPath, "ignorewords.json");
+
         public static List<string> LoadAll()
         {
-            var result = new List<string>();
-            if (File.Exists(filePath))
+            try
             {
-                result = JsonSerializer.Deserialize<List<string>>(File.ReadAllText(filePath));
+                if (!File.Exists(filePath))
+                    return new List<string>();
+
+                var json = File.ReadAllText(filePath);
+
+                return JsonSerializer.Deserialize<List<string>>(json)
+                       ?? new List<string>(); // handle null JSON
             }
-            return result;
+            catch (Exception ex)
+            {
+                // Optional: log exception somewhere
+                return new List<string>();
+            }
         }
     }
 }

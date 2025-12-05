@@ -76,23 +76,16 @@ namespace APMD.Data
             _viewDb = new MySqlConnection(connectionString);
         }
 
-        public async Task<IEnumerable<Model>> GetAll(List<Model> loadedModels, int count, int skip)
+        public async Task<IEnumerable<Model>> GetAll(int count, int skip)
         {
             var sql = new StringBuilder();
             var parameters = new DynamicParameters();
 
-            // Build SELECT clause
             sql.Append("SELECT * FROM ModelSummaryView");
 
+            // no WHERE here (unless you add filters like search, active, etc.)
 
-            if (loadedModels != null && loadedModels.Any())
-            {
-                // Assuming Model has a primary key like Id
-                sql.Append(" WHERE PK_MODEL_ID NOT IN @Ids");
-                parameters.Add( "Ids", loadedModels.Select(m => m.PK_MODEL_ID).ToList());
-            }
-
-            sql.Append(" ORDER BY Name ASC");
+            sql.Append(" ORDER BY Name ASC, PK_MODEL_ID ASC"); // stable ordering
 
             if (count >= 0)
             {
@@ -100,7 +93,8 @@ namespace APMD.Data
                 parameters.Add("Limit", count);
                 parameters.Add("Offset", skip);
             }
-            var result = await _viewDb.QueryAsync<Model>(sql.ToString(), parameters,null,30);
+
+            var result = await _viewDb.QueryAsync<Model>(sql.ToString(), parameters, commandTimeout: 120);
             return result;
         }
 

@@ -17,9 +17,9 @@ namespace APMD.Data
             _setsRepository = new SetsRepository(_connectionString);
         }
 
-        public async Task<IEnumerable<Model>> GetAll(List<Model> loadedModels, int count = -1, int skip = 0)
+        public async Task<IEnumerable<Model>> GetAll(int count = -1, int skip = 0)
         {
-            return await _modelsRepository.GetAll(loadedModels, count, skip).ConfigureAwait(false);
+            return await _modelsRepository.GetAll(count, skip);
         }
 
         public Model? GetById(int keyModel)

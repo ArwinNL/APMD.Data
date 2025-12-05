@@ -16,7 +16,8 @@ namespace APMD.Data
                 cnn.UserID = credential.UserName;
                 cnn.Password = "BCOBR5ra9gIHprxsUOXr2iEc6!";//credential.Password;
                 //cnn.ApplicationName = credential.ApplicationName;
-                cnn.Server = "192.168.178.11";
+                cnn.Server = "MariaDb.home.aran-it.nl";
+                //cnn.Server = "127.0.0.1";
                 cnn.Port = 3306;
                 //:/run/mysqld/mysqld10.sock
                 cnnstring = cnn.ToString();
