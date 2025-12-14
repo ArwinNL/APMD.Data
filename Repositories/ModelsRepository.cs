@@ -64,6 +64,10 @@ namespace APMD.Data
             ORDER BY
                 m.Name;";
 
+        const string sql_delete_setmodel_by_setid = @"
+            DELETE FROM SetModels
+            WHERE FK_SET_ID = @pK_SET_ID;";
+
         const string sql_selectForSet = @"SELECT m.* FROM SetModels sm INNER JOIN Models m ON sm.FK_MODEL_ID = m.PK_MODEL_ID WHERE sm.FK_SET_ID = @id";
 
         const string sql_icg = @"SELECT m.* FROM Models m WHERE m.ICG = @icg";
@@ -163,6 +167,11 @@ namespace APMD.Data
                 WHERE Name LIKE LOWER(@word)
                 ORDER BY Name ASC", new { word = $"%{word.ToLowerInvariant()}%" });
             return result;
+        }
+
+        internal int DeleteModelsForSet(long pK_SET_ID)
+        {
+            return _db.Execute(sql_delete_setmodel_by_setid, new { pK_SET_ID });
         }
     }
 }

@@ -152,10 +152,26 @@ namespace APMD.Data
         public bool Delete(Set set)
         {
             try
-            { 
-                _dataManager.Tag.DeleteTagsForSet(set.PK_SET_ID);
-                _dataManager.Model.DeleteModelsForSet(set.PK_SET_ID);
-                _setsRepository.Delete(set.PK_SET_ID);
+            {
+                try
+                {
+                    if (set.Photos == null || set.Photos.Count == 0)
+                        _dataManager.Photo.GetAllForSet(set);
+                    if (set.Photos != null && set.Photos.Count > 0)
+                    { 
+                        foreach (var photo in set.Photos)
+                        {
+                            _dataManager.Photo.Delete(photo);
+                        }
+                    }
+                    _dataManager.Tag.DeleteTagsForSet(set.PK_SET_ID);
+                    _dataManager.Model.DeleteModelsForSet(set.PK_SET_ID);
+                    _setsRepository.Delete(set.PK_SET_ID);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Error deleting photos for set {set.PK_SET_ID}: {ex.Message}", ex);
+                }
                 return true;
             }
             catch (Exception ex)

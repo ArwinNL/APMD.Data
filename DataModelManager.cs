@@ -137,13 +137,7 @@ namespace APMD.Data
 
         internal void DeleteModelsForSet(long pK_SET_ID)
         {
-            var models = _modelsRepository.GetAllForSet(pK_SET_ID);
-            int count = 0;
-            models.ForEach(m => { count += _modelsRepository.Delete(m.PK_MODEL_ID); });
-            if (count == models.Count) return;
-            var msgError = $"Not all models have been deleted for set {pK_SET_ID}";
-            Log.Error(msgError);
-            throw new Exception(msgError);
+            _modelsRepository.DeleteModelsForSet(pK_SET_ID);
         }
 
         public async Task GetAllDetails(Model model)
