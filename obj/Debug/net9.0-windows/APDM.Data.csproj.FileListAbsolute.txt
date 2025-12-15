@@ -1,5 +1,0 @@
-I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\APDM.Data.csproj.AssemblyReference.cache
-I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\APDM.Data.GeneratedMSBuildEditorConfig.editorconfig
-I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\APDM.Data.AssemblyInfoInputs.cache
-I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\APDM.Data.AssemblyInfo.cs
-I:\git.github\APMD\APDM.Data\obj\Debug\net9.0-windows\APDM.Data.csproj.CoreCompileInputs.cache
