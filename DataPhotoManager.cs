@@ -35,6 +35,7 @@
                 if (set.Photos != null && set.Photos.Count > 0)
                 {
                     set.SetPhoto = set.Photos.First();
+                    _dataManager.Set.Update(set);
                 }
             }
             return set.SetPhoto;
@@ -94,8 +95,13 @@
             }
         }
 
-        public void Delete(Photo photo)
+        public void Delete(Photo photo, bool removeFromSet = false)
         {
+            if (removeFromSet)
+            {
+                photo.FK_SET_ID = null;
+                _photoRepository.Update(photo);
+            }
             _photoRepository.Delete(photo.PK_PHOTO_ID);
         }
 

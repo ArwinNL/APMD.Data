@@ -212,11 +212,11 @@ namespace APMD.Data
             return result;
         }
 
-        internal Set GetById(int id)
+        internal Set GetById(long id, bool throwExeception = true)
         {
 
             var result = _db.QueryFirstOrDefault<Set>(sql_set_byid, new { id });
-            if (result == null)
+            if (result == null && throwExeception)
                 throw new KeyNotFoundException($"Set with ID {id} not found.");
             return result;
         }

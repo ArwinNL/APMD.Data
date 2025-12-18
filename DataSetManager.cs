@@ -50,6 +50,12 @@ namespace APMD.Data
             return _setsRepository.GetAllForModel(keyModel).ToList();
         }
 
+        public void GetAllForModel(Model model)
+        {
+            var sets = _setsRepository.GetAllForModel(model.PK_MODEL_ID).ToList();
+            model.Sets = sets;
+        }
+
         public void RemoveTag(Tag tag, Set currentSet)
         {
             try
@@ -68,7 +74,7 @@ namespace APMD.Data
             }
         }
 
-        public Set? GetById(int keySet)
+        public Set? GetById(long keySet)
         {
             var result = _setsRepository.GetById(keySet);
             if (result == null)
@@ -82,6 +88,10 @@ namespace APMD.Data
         {
             try
             {
+                if (set.SetPhoto != null && set.SetPhoto.PK_PHOTO_ID != set.FK_PHOTO_ID)
+                {
+                    set.FK_PHOTO_ID = set.SetPhoto.PK_PHOTO_ID;
+                }
                 var result = _setsRepository.Update(set);
                 if (result == 0)
                 {
@@ -149,19 +159,25 @@ namespace APMD.Data
             _setsRepository.RemoveModelFromSet(pK_MODEL_ID, pK_SET_ID);
         }
 
-        public bool Delete(Set set)
+        public bool Delete(Set set,bool removePhotosFromSet = false)
         {
             try
             {
                 try
                 {
+                    if (set.FK_PHOTO_ID != null)
+                    {
+                        set.FK_PHOTO_ID = null;
+                        set.SetPhoto = null;
+                        _dataManager.Set.Update(set);
+                    }
                     if (set.Photos == null || set.Photos.Count == 0)
                         _dataManager.Photo.GetAllForSet(set);
                     if (set.Photos != null && set.Photos.Count > 0)
                     { 
                         foreach (var photo in set.Photos)
                         {
-                            _dataManager.Photo.Delete(photo);
+                            _dataManager.Photo.Delete(photo, removePhotosFromSet);
                         }
                     }
                     _dataManager.Tag.DeleteTagsForSet(set.PK_SET_ID);
@@ -237,6 +253,18 @@ namespace APMD.Data
         public List<Set> GetSetsWithDuplicateItems()
         {
             return _setsRepository.GetDoubled();
+        }
+
+        public IEnumerable<Set> GetSetsInRange(long startSetID, long endSetID)
+        {
+            for (long i = startSetID; i <= endSetID; i++)
+            {
+                var set = _setsRepository.GetById((int)i,false);
+                if (set != null)
+                {
+                    yield return set;
+                }
+            }
         }
     }
 
