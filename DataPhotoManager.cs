@@ -19,7 +19,9 @@
 
         public Photo? GetById(long value)
         {
-            return _photoRepository.GetById(value);
+            var photo = _photoRepository.GetById(value);
+            photo.ThumbnailServerShare = _dataManager.ServerShare.ThumbnailServerShare;
+            return photo;
         }
 
         public Photo? GetForSet(Set set)
@@ -44,6 +46,7 @@
         public void GetAllForSet(Set set)
         {
             var result = _photoRepository.GetAllForSet(set.PK_SET_ID);
+            result.ForEach(p => p.ThumbnailServerShare = _dataManager.ServerShare.ThumbnailServerShare);
             if (set.Archived)
                 result.ForEach(p => { p.Archived = set.Archived; Photo.ArchiveServerShare = _dataManager.ServerShare.ArchiveServerShare; } );
             set.Photos = result;
@@ -108,6 +111,7 @@
         public void Insert(Photo photo)
         {
             _photoRepository.Insert(photo);
+            photo.ThumbnailServerShare = _dataManager.ServerShare.ThumbnailServerShare;
         }
 
         public void SetUpdate(List<Photo> photos)

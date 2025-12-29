@@ -15,6 +15,7 @@ namespace APMD.Data
             get => _archiveServerShare; 
             internal set => _archiveServerShare = value;
         }
+        public ServerShare ThumbnailServerShare => DefaultServerShare;
 
         public ServerShare GetServerShareById(int serverShareId)
         {

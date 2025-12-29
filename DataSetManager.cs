@@ -165,6 +165,7 @@ namespace APMD.Data
             {
                 try
                 {
+                    _dataManager.Photo.GetForSet(set);
                     if (set.FK_PHOTO_ID != null)
                     {
                         set.FK_PHOTO_ID = null;

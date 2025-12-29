@@ -75,9 +75,12 @@ namespace APMD.Data
         [NotMapped]
         public string ArchivePhotoFile => $"{Photo.ArchiveServerShare?.GetUNCPath()}\\{FilePath}{FileName}{FileExtension}";
         [NotMapped]
-        public string ThumbnailFile => $"{ServerShare?.GetUNCPath()}\\{ThumbnailPath}{FileName}{FileExtension}";
+        public string ThumbnailFile => $"{ThumbnailServerShare?.GetUNCPath()}\\{ThumbnailPath}{FileName}{FileExtension}";
         [NotMapped]
         public string ServerShareFile => $"{ServerShare?.GetUNCPath()}\\{FilePath}{FileName}{FileExtension}";
+        [NotMapped]
+        public ServerShare? ThumbnailServerShare { get; set; }
+
         public Photo()
         {
             OriginalFilename = string.Empty;
