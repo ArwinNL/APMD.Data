@@ -1,11 +1,8 @@
 
 using Dapper;
-using Dapper.Mapper;
+using Dapper.Contrib.Extensions;
 using MySqlConnector;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using Z.Dapper.Plus;
 
 namespace APMD.Data
 {
@@ -124,12 +121,14 @@ namespace APMD.Data
 
         internal void BulkUpdate(List<Photo> photos)
         {
-            _db.BulkUpdate(photos);
+            foreach (var photo in photos)
+                _db.Update<Photo>(photo);
         }
 
         internal void BulkInsert(List<Photo> photos)
         {
-            _db.BulkInsert(photos);
+            foreach (var photo in photos)
+                photo.PK_PHOTO_ID = _db.Insert<Photo>(photo);
         }
     }
 }

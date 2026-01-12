@@ -10,6 +10,28 @@ namespace APMD.Data
     {
         private readonly IDbConnection _db;
 
+        const string sqlInsert = @"
+            INSERT INTO Websites
+            (
+                Name,
+                URL
+            )
+            VALUES
+            (
+                @Name,
+                @URL
+            );
+            SELECT LAST_INSERT_ID();
+            ";
+
+        const string sqlUpdate = @"
+            UPDATE Websites
+            SET
+                Name = @Name,
+                URL = @URL
+            WHERE PK_WEBSITE_ID = @PK_WEBSITE_ID;
+            ";
+
         public WebsitesRepository(string connectionString)
         {
             _db = new MySqlConnection(connectionString);
@@ -28,11 +50,15 @@ namespace APMD.Data
         public Websites? GetById(int id) =>
             _db.QueryFirstOrDefault<Websites>("SELECT * FROM Websites WHERE PK_WEBSITE_ID = @id", new { id });
 
-        public int Insert(Websites item) =>
-            _db.Execute("INSERT INTO Websites (...) VALUES (...)" /* TODO: Fill columns */, item);
+        public int Insert(Websites item)
+        {
+            var key = _db.ExecuteScalar<int>(sqlInsert, item);
+            item.PK_WEBSITE_ID = key;
+            return key;
+        }
 
         public int Update(Websites item) =>
-            _db.Execute("UPDATE Websites SET ... WHERE PK_WEBSITE_ID = @PK_WEBSITE_ID" /* TODO: Fill columns */, item);
+            _db.Execute(sqlUpdate, item);
 
         public int Delete(int id) =>
             _db.Execute("DELETE FROM Websites WHERE PK_WEBSITE_ID = @id", new { id });

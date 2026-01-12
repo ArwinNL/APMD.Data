@@ -65,6 +65,17 @@ namespace APMD.Data
             SetChange?.Invoke(sender, e);
         }
 
+        internal void BeginTransaction()
+        {
+        }
+
+        internal void CommitTransaction()
+        {
+        }
+
+        internal void RollbackTransaction()
+        {
+        }
     }
 
     public enum DataAction

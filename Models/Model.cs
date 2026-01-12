@@ -45,6 +45,9 @@ namespace APMD.Data
         public Model? MainModel { get; set; }
 
         [NotMapped]
+        public string DisplayName => $"{Name} [{ICG}]".Trim(); 
+
+        [NotMapped]
         public List<Set> Sets { get; set; } = new List<Set>();
 
         [NotMapped]

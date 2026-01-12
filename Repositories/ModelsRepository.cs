@@ -89,7 +89,7 @@ namespace APMD.Data
 
             // no WHERE here (unless you add filters like search, active, etc.)
 
-            sql.Append(" ORDER BY Name ASC, PK_MODEL_ID ASC"); // stable ordering
+            //sql.Append(" ORDER BY Name ASC, PK_MODEL_ID ASC"); // stable ordering
 
             if (count >= 0)
             {
@@ -156,14 +156,14 @@ namespace APMD.Data
                 parameters.Add("@word", word.ToLowerInvariant());
                 parameters.Add("@PK_Website_ID", website.PK_WEBSITE_ID);
 
-                var result = _viewDb.Query<Model>(sql_model_search, parameters);
+                var result = _db.Query<Model>(sql_model_search, parameters);
                 return result;
             }
         }
 
         internal IEnumerable<Model> SearchOnWord(string word)
         {
-            var result = _viewDb.Query<Model>(@$"SELECT * FROM Models
+            var result = _db.Query<Model>(@$"SELECT * FROM Models
                 WHERE Name LIKE LOWER(@word)
                 ORDER BY Name ASC", new { word = $"%{word.ToLowerInvariant()}%" });
             return result;

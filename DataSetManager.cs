@@ -27,7 +27,7 @@ namespace APMD.Data
             {
                 try
                 {
-                    var setTag =_setsRepository.AddTagToSet(tag, set);
+                    var setTag = _setsRepository.AddTagToSet(tag, set);
                     _dataManager.Tag.AllTagsForSet(set);
                     _dataManager.DoSetChange(this, new EventArgsSet(set, DataAction.Update));
                 }
@@ -36,7 +36,7 @@ namespace APMD.Data
                     Log.Error(ex.Message, ex);
                     throw;
                 }
-                
+
             }
             return new SetTags
             {
@@ -105,7 +105,7 @@ namespace APMD.Data
                     return;
                 _dataManager.Photo.GetAllForSet(set);
                 _dataManager.Tag.AllTagsForSet(set);
-                _dataManager.DoSetChange(this, new EventArgsSet(set,DataAction.Update));
+                _dataManager.DoSetChange(this, new EventArgsSet(set, DataAction.Update));
             }
             catch (Exception ex)
             {
@@ -159,7 +159,7 @@ namespace APMD.Data
             _setsRepository.RemoveModelFromSet(pK_MODEL_ID, pK_SET_ID);
         }
 
-        public bool Delete(Set set,bool removePhotosFromSet = false)
+        public bool Delete(Set set, bool removePhotosFromSet = false)
         {
             try
             {
@@ -175,7 +175,7 @@ namespace APMD.Data
                     if (set.Photos == null || set.Photos.Count == 0)
                         _dataManager.Photo.GetAllForSet(set);
                     if (set.Photos != null && set.Photos.Count > 0)
-                    { 
+                    {
                         foreach (var photo in set.Photos)
                         {
                             _dataManager.Photo.Delete(photo, removePhotosFromSet);
@@ -202,7 +202,7 @@ namespace APMD.Data
         {
             var result = await _setsRepository.GetSetInfo();
 
-            var modelDict = result.ToDictionary(m => m.PK_MODEL_ID );
+            var modelDict = result.ToDictionary(m => m.PK_MODEL_ID);
 
             foreach (var model in models)
             {
@@ -228,7 +228,7 @@ namespace APMD.Data
 
         public PagedResult<Set> GetAllUnassigned(int pageSize, int offset)
         {
-            var result = _setsRepository.GetAllUnassigned(pageSize,offset);
+            var result = _setsRepository.GetAllUnassigned(pageSize, offset);
             return result;
         }
 
@@ -260,14 +260,70 @@ namespace APMD.Data
         {
             for (long i = startSetID; i <= endSetID; i++)
             {
-                var set = _setsRepository.GetById((int)i,false);
+                var set = _setsRepository.GetById((int)i, false);
                 if (set != null)
                 {
                     yield return set;
                 }
             }
         }
+
+        public void MergeSets(List<Set> setsToMerge)
+        {
+            // start transaction
+            _dataManager.BeginTransaction();
+            try
+            {
+                var sourceSet = setsToMerge[0];
+                GetAllDetails(sourceSet);
+                for (int i = 1; i < setsToMerge.Count - 1; i++)
+                {
+                    var targetSet = setsToMerge[i];
+                    // Merge tags, models, photos, etc. from setsToMerge[i] into sourceSet
+                    GetAllDetails(targetSet);
+                    targetSet.Tags.ForEach(tag =>
+                    {
+                        if (!sourceSet.Tags.Any(t => t.PK_TAG_ID == tag.PK_TAG_ID))
+                        {
+                            sourceSet.Tags.Add(tag);
+                            _setsRepository.AddTagToSet(tag, sourceSet);
+                        }
+                    });
+                    targetSet.Models.ForEach(model =>
+                    {
+                        if (!sourceSet.Models.Any(m => m.PK_MODEL_ID == model.PK_MODEL_ID))
+                        {
+                            sourceSet.Models.Add(model);
+                            _setsRepository.AddModelToSet(model.PK_MODEL_ID, sourceSet.PK_SET_ID);
+                        }
+                    });
+                    targetSet.Photos.ForEach(photo =>
+                    {
+                        if (!sourceSet.Photos.Any(p => p.PK_PHOTO_ID == photo.PK_PHOTO_ID))
+                        {
+                            sourceSet.Photos.Add(photo);
+                            photo.FK_SET_ID = sourceSet.PK_SET_ID;
+                            _dataManager.Photo.Update(photo);
+                        }
+                    });
+                    targetSet.Photos.Clear();
+                    targetSet.Models.Clear();
+                    targetSet.Tags.Clear();
+                    targetSet.FK_PHOTO_ID = null;
+                    _dataManager.Set.Update(targetSet);
+                    _dataManager.Set.Delete(targetSet);
+                    _dataManager.DoSetChange(this, new EventArgsSet(targetSet, DataAction.Delete));
+                }
+                _dataManager.Photo.GetAllForSet(sourceSet);
+                _dataManager.DoSetChange(this, new EventArgsSet(sourceSet, DataAction.Update));
+                _dataManager.CommitTransaction();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error merging sets: {ex.Message}", ex);
+                _dataManager.RollbackTransaction();
+                throw;
+            }
+        }
     }
-
-
 }

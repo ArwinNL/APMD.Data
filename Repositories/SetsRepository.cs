@@ -46,7 +46,8 @@ namespace APMD.Data
                     FK_PHOTO_ID,
                     PublishedAt,
                     Archived,
-                    Tagged
+                    Tagged,
+                    AllPhotosStored
                 )
             VALUES
                 (
@@ -55,7 +56,8 @@ namespace APMD.Data
                     @FK_PHOTO_ID,
                     @PublishedAt,
                     @Archived,
-                    @Tagged
+                    @Tagged,
+                    @AllPhotosStored
                 );
             SELECT LAST_INSERT_ID();
             ";
@@ -69,7 +71,8 @@ namespace APMD.Data
                 FK_WEBSITE_ID = @FK_WEBSITE_ID,
                 Archived = @Archived,
                 Tagged = @Tagged,
-                PublishedAt = @PublishedAt
+                PublishedAt = @PublishedAt,
+                AllPhotosStored = @AllPhotosStored
             WHERE 
                 PK_SET_ID = @PK_SET_ID;
             ";
@@ -180,6 +183,29 @@ namespace APMD.Data
                 s.PK_SET_ID;
             ";
 
+        const string sql_update_all_photos_stored = @"
+            UPDATE 
+                Sets
+            SET 
+                AllPhotosStored = @AllPhotosStored
+            WHERE 
+                PK_SET_ID = @PK_SET_ID;
+            ";
+
+        const string sql_refresh_all_photos_stored = @"
+            UPDATE Sets s
+            LEFT JOIN (
+              SELECT
+                p.FK_SET_ID,
+                CASE
+                  WHEN SUM(p.Stored = 0) > 0 THEN 0   -- at least 1 missing
+                  ELSE 1                                -- none missing
+                END AS NewAllPhotosStored
+              FROM Photo p
+              GROUP BY p.FK_SET_ID
+            ) x ON x.FK_SET_ID  = s.PK_SET_ID
+            SET s.AllPhotosStored = COALESCE(x.NewAllPhotosStored, 1);
+            ";
         private readonly IDbConnection _db;
 
         public SetsRepository(string connectionString)

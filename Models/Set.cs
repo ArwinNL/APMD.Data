@@ -21,12 +21,17 @@ namespace APMD.Data
         public bool Archived { get; set; }
         public bool Tagged { get; set; }
         public DateTime? PublishedAt { get; set; }
+        public bool AllPhotosStored { get; set; }
 
-        
+
         [ForeignKey("FK_PHOTO_ID")]
         public Photo? SetPhoto{ 
             get
             {
+                if (_setPhoto == null && Photos != null)
+                {
+                    _setPhoto = Photos.FirstOrDefault(p => p.PK_PHOTO_ID == FK_PHOTO_ID);
+                }
                 if (_setPhoto != null &&  Archived)
                     _setPhoto.Archived = true;
                 return _setPhoto;
@@ -41,6 +46,7 @@ namespace APMD.Data
 
         [NotMapped]
         public List<Tag> Tags { get; set; } = new List<Tag>();
+
 
         [NotMapped]
         public Websites? Website 

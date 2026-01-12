@@ -33,6 +33,7 @@ namespace APMD.Data
             {
                 foreach (var si in saveImport)
                 {
+                    if (!si.Import) continue;
                     var import = new Import(si);
                     _importRepository.Insert(import);
                     si.Tag = import;
