@@ -57,7 +57,7 @@ namespace APMD.Data
         public void GetForSets(List<Set> sets)
         {
             if (sets == null) return;
-            sets.ForEach( s => { AllTagsForSet(s); } );
+            sets.ForEach(s => { AllTagsForSet(s); });
         }
 
         public List<TagGroups> AllTagGroups()
@@ -104,7 +104,7 @@ namespace APMD.Data
             int count = 0;
             tags.ForEach(t => { count += _tagsRepository.Delete(t.PK_TAG_ID); });
 
-            if (count == tags.Count) return; 
+            if (count == tags.Count) return;
 
             var msgError = $"Not all tags have been deleted for set {pK_SET_ID}";
             Log.Error(msgError);
@@ -114,6 +114,11 @@ namespace APMD.Data
         public IEnumerable<Tag> AllTagsForGroup(TagGroups tagGroup)
         {
             return _tagsRepository.GetAllForGroup(tagGroup.PK_TAGGROUP_ID);
+        }
+
+        internal int CountPhoto(long pK_PHOTO_ID)
+        {
+            return _tagsRepository.CountPhoto(pK_PHOTO_ID);
         }
     }
 

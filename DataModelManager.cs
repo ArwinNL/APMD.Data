@@ -22,7 +22,7 @@ namespace APMD.Data
             return await _modelsRepository.GetAll(count, skip);
         }
 
-        public Model? GetById(int keyModel)
+        public Model? GetById(long keyModel)
         {
             return _modelsRepository.GetById(keyModel);
         }
@@ -106,7 +106,7 @@ namespace APMD.Data
         }
         internal List<Model> GetAllForSet(long pK_SET_ID)
         {
-           return _modelsRepository.GetAllForSet(pK_SET_ID);
+            return _modelsRepository.GetAllForSet(pK_SET_ID);
         }
 
         public bool CompareEqual(Model currentModel, bool save = false)
@@ -196,6 +196,11 @@ namespace APMD.Data
         public Photo? GetFirstPhoto(Model model)
         {
             return _dataManager.Photo.GetForModel(model);
+        }
+
+        internal int CountPhoto(long pK_PHOTO_ID)
+        {
+            return _modelsRepository.CountPhoto(pK_PHOTO_ID);
         }
     }
 

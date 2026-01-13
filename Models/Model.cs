@@ -2,12 +2,10 @@
 
 namespace APMD.Data
 {
-    using Dapper;
+    using Dapper.Contrib.Extensions;
     using System.ComponentModel;
-    using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Threading.Tasks;
-    using Dapper.Contrib.Extensions;
 
 
     public class Model : INotifyPropertyChanged
@@ -16,13 +14,13 @@ namespace APMD.Data
 
         [Dapper.Contrib.Extensions.Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int PK_MODEL_ID { get; set; }
+        public long PK_MODEL_ID { get; set; }
 
         public required string Name { get; set; } = string.Empty;
 
         public int? FK_MAIN_MODEL_ID { get; set; }
 
-        public int? FK_PHOTO_ID { get; set; }
+        public long? FK_PHOTO_ID { get; set; }
 
         public required short Rank { get; set; } = 0;
 
@@ -45,7 +43,7 @@ namespace APMD.Data
         public Model? MainModel { get; set; }
 
         [NotMapped]
-        public string DisplayName => $"{Name} [{ICG}]".Trim(); 
+        public string DisplayName => $"{Name} [{ICG}]".Trim();
 
         [NotMapped]
         public List<Set> Sets { get; set; } = new List<Set>();

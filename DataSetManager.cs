@@ -45,7 +45,7 @@ namespace APMD.Data
             };
         }
 
-        public List<Set> GetAllForModel(int keyModel)
+        public List<Set> GetAllForModel(long keyModel)
         {
             return _setsRepository.GetAllForModel(keyModel).ToList();
         }
@@ -149,12 +149,12 @@ namespace APMD.Data
             }
         }
 
-        private void AddModelToSet(int pK_MODEL_ID, long pK_SET_ID)
+        private void AddModelToSet(long pK_MODEL_ID, long pK_SET_ID)
         {
             _setsRepository.AddModelToSet(pK_MODEL_ID, pK_SET_ID);
         }
 
-        private void RemoveModelFromSet(int pK_MODEL_ID, long pK_SET_ID)
+        private void RemoveModelFromSet(long pK_MODEL_ID, long pK_SET_ID)
         {
             _setsRepository.RemoveModelFromSet(pK_MODEL_ID, pK_SET_ID);
         }
@@ -201,7 +201,6 @@ namespace APMD.Data
         public async Task GetSetInfo(List<Model> models)
         {
             var result = await _setsRepository.GetSetInfo();
-
             var modelDict = result.ToDictionary(m => m.PK_MODEL_ID);
 
             foreach (var model in models)

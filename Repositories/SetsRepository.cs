@@ -1,12 +1,10 @@
-
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Text;
 using APMD.Data.Models;
 using Dapper;
 using Dapper.Mapper;
 using MySqlConnector;
+using System.Data;
+using System.Data.Common;
+using System.Text;
 
 namespace APMD.Data
 {
@@ -218,18 +216,18 @@ namespace APMD.Data
             //public IEnumerable<Sets> GetAll() =>
             var sets = await _db.QueryAsync<Set, Model, Websites, Set>(
                 sql_set_all,
-                (set, model, website) => 
-                { 
+                (set, model, website) =>
+                {
                     set.Models.Add(model);
                     set.Website = website;
                     return set;
-                }, 
+                },
                 splitOn: "PK_MODEL_ID,PK_WEBSITE_ID"
             );
             return sets;
         }
 
-        internal IEnumerable<Set> GetAllForModel(int keyModel)
+        internal IEnumerable<Set> GetAllForModel(long keyModel)
         {
             var result = _db.Query<Set>(
                 sql_for_model,
@@ -247,7 +245,7 @@ namespace APMD.Data
             return result;
         }
 
-        public Task<IEnumerable<ModelStats>> GetSetInfo(int? keyModel = null)
+        public Task<IEnumerable<ModelStats>> GetSetInfo(long? keyModel = null)
         {
             var sql = new StringBuilder();
             var parameters = new DynamicParameters();
@@ -258,7 +256,7 @@ namespace APMD.Data
 
             if (!(keyModel == null))
             {
-                sql.Replace("GROUP BY m.PK_MODEL_ID;","WHERE m.PK_MODEL_ID = @keyModel GROUP BY m.PK_MODEL_ID;");
+                sql.Replace("GROUP BY m.PK_MODEL_ID;", "WHERE m.PK_MODEL_ID = @keyModel GROUP BY m.PK_MODEL_ID;");
                 parameters.Add("keyModel", keyModel);
             }
 
@@ -306,14 +304,14 @@ namespace APMD.Data
             return setTags;
         }
 
-        internal int DeleteReference(int keyTag, long keySet) => 
+        internal int DeleteReference(int keyTag, long keySet) =>
             _db.Execute(sql_deletereference, new { FK_SET_ID = keySet, FK_TAG_ID = keyTag });
-        internal int DeleteReference(Tag tag, Set currentSet) => 
+        internal int DeleteReference(Tag tag, Set currentSet) =>
             DeleteReference(tag.PK_TAG_ID, currentSet.PK_SET_ID);
-        internal int DeleteReference(SetTags setTags) => 
+        internal int DeleteReference(SetTags setTags) =>
             DeleteReference(setTags.FK_TAG_ID, setTags.FK_SET_ID);
 
-        internal void AddModelToSet(int pK_MODEL_ID, long pK_SET_ID)
+        internal void AddModelToSet(long pK_MODEL_ID, long pK_SET_ID)
         {
             var parameters = new DynamicParameters();
             parameters.Add("@FK_SET_ID", pK_SET_ID);
@@ -323,7 +321,7 @@ namespace APMD.Data
                 throw new DataUpdateFailedException($"Addition of model {pK_MODEL_ID} to set {pK_SET_ID} failed");
         }
 
-        internal void RemoveModelFromSet(int pK_MODEL_ID, long pK_SET_ID)
+        internal void RemoveModelFromSet(long pK_MODEL_ID, long pK_SET_ID)
         {
             var parameters = new DynamicParameters();
             parameters.Add("@FK_SET_ID", pK_SET_ID);

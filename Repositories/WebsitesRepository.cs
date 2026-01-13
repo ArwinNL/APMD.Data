@@ -1,8 +1,6 @@
-
-using System.Collections.Generic;
-using System.Data;
 using Dapper;
 using MySqlConnector;
+using System.Data;
 
 namespace APMD.Data
 {
@@ -66,7 +64,7 @@ namespace APMD.Data
         internal IEnumerable<Websites> SearchOnWord(string word) =>
             _db.Query<Websites>("SELECT * FROM Websites WHERE Name LIKE @word", new { word = $"%{word}%" });
 
-        internal List<Websites> GetByModelId(int pK_MODEL_ID)
+        internal List<Websites> GetByModelId(long pK_MODEL_ID)
         {
             const string sql_oud = @"
                 SELECT w.* 
@@ -89,6 +87,11 @@ namespace APMD.Data
                 );
                 ";
             return _db.Query<Websites>(sql, new { PK_MODEL_ID = pK_MODEL_ID }).ToList();
+        }
+
+        internal int CountPhoto(long pK_PHOTO_ID)
+        {
+            return _db.ExecuteScalar<int>(@"SELECT COUNT(*) FROM Websites w WHERE w.FK_PHOTO_ID = @pK_PHOTO_ID", new { pK_PHOTO_ID });
         }
     }
 }

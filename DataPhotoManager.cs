@@ -24,6 +24,19 @@
             return photo;
         }
 
+        public Photo? GetForModel(Set set)
+        {
+            if (set.Models == null || set.Models.Count < 1)
+                set.Models = _dataManager.Model.GetAllForSet(set.PK_SET_ID);
+
+            if (set.Models != null && set.Models.Count > 0)
+            {
+                if (set.Models[0].ModelPhoto != null) return set.Models[0].ModelPhoto;
+                if (set.Models[0].FK_PHOTO_ID != null) return GetById(set.Models[0].FK_PHOTO_ID.Value);
+            }
+            return null;
+        }
+
         public Photo? GetForSet(Set set)
         {
             if (set.SetPhoto == null)
@@ -48,7 +61,7 @@
             var result = _photoRepository.GetAllForSet(set.PK_SET_ID);
             result.ForEach(p => p.ThumbnailServerShare = _dataManager.ServerShare.ThumbnailServerShare);
             if (set.Archived)
-                result.ForEach(p => { p.Archived = set.Archived; Photo.ArchiveServerShare = _dataManager.ServerShare.ArchiveServerShare; } );
+                result.ForEach(p => { p.Archived = set.Archived; Photo.ArchiveServerShare = _dataManager.ServerShare.ArchiveServerShare; });
             set.Photos = result;
         }
 
@@ -98,14 +111,22 @@
             }
         }
 
-        public void Delete(Photo photo, bool removeFromSet = false)
+        public int Delete(Photo photo, bool removeFromSet = false)
         {
+            int referenceCount = 0;
+            referenceCount += _dataManager.Model.CountPhoto(photo.PK_PHOTO_ID);
+            referenceCount += _dataManager.Tag.CountPhoto(photo.PK_PHOTO_ID);
+            referenceCount += _dataManager.Website.CountPhoto(photo.PK_PHOTO_ID);
+            if (referenceCount > 1)
+            {
+                throw new InvalidOperationException("Kan de foto niet verwijderen omdat er referenties zijn naar modellen en/of tags.");
+            }
             if (removeFromSet)
             {
                 photo.FK_SET_ID = null;
                 _photoRepository.Update(photo);
             }
-            _photoRepository.Delete(photo.PK_PHOTO_ID);
+            return _photoRepository.Delete(photo.PK_PHOTO_ID);
         }
 
         public void Insert(Photo photo)

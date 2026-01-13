@@ -1,9 +1,7 @@
-
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
 using Dapper;
 using MySqlConnector;
+using System.Data;
+using System.Text;
 
 namespace APMD.Data
 {
@@ -111,7 +109,7 @@ namespace APMD.Data
         }
 
 
-        public Model GetById(int id)
+        public Model GetById(long id)
         {
             var result = _db.QueryFirstOrDefault<Model>("SELECT * FROM Models WHERE PK_MODEL_ID = @id", new { id });
             if (result == null)
@@ -126,7 +124,7 @@ namespace APMD.Data
             return result.AsList();
         }
 
-        public int Insert(Model item)
+        public long Insert(Model item)
         {
             item.PK_MODEL_ID = _db.ExecuteScalar<int>(sql_insert, item);
             return item.PK_MODEL_ID;
@@ -135,12 +133,12 @@ namespace APMD.Data
         public int Update(Model item) =>
             _db.Execute(sql_update, item);
 
-        public int Delete(int id) =>
+        public int Delete(long id) =>
             _db.Execute(sql_delete, new { id });
 
         internal List<Model> GetAllForSet(long id)
         {
-            var result = _db.Query<Model>(sql_selectForSet, new {id });
+            var result = _db.Query<Model>(sql_selectForSet, new { id });
             return result.AsList();
         }
 
@@ -172,6 +170,11 @@ namespace APMD.Data
         internal int DeleteModelsForSet(long pK_SET_ID)
         {
             return _db.Execute(sql_delete_setmodel_by_setid, new { pK_SET_ID });
+        }
+
+        internal int CountPhoto(long pK_PHOTO_ID)
+        {
+            return _db.ExecuteScalar<int>(@"SELECT COUNT(*) FROM Models WHERE FK_PHOTO_ID = @pK_PHOTO_ID", new { pK_PHOTO_ID });
         }
     }
 }

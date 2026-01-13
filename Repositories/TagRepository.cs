@@ -1,10 +1,6 @@
-
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Xml.Linq;
 using Dapper;
 using MySqlConnector;
+using System.Data;
 
 namespace APMD.Data
 {
@@ -125,7 +121,8 @@ namespace APMD.Data
                 );
         }
 
-        public Tag? GetById(int id) { 
+        public Tag? GetById(int id)
+        {
 
             var result = new Tag() { PK_TAG_ID = 0, Name = String.Empty };
             var resultQuery = _db.Query<Tag, TagGroups, Tag>(
@@ -195,7 +192,7 @@ namespace APMD.Data
             return id;
         }
         public int Delete(int id) =>
-            
+
         _db.Execute(sql_tag_detete, new { id });
 
         public IEnumerable<Tag> GetAllForSet(Set set) => GetAllForSet(set.PK_SET_ID);
@@ -227,6 +224,13 @@ namespace APMD.Data
             }
             else
                 return _db.Query<Tag>(sql_tag_select_by_model, new { modelId = model.PK_MODEL_ID });
+        }
+
+        internal int CountPhoto(long pK_PHOTO_ID)
+        {
+            var result = _db.ExecuteScalar<int>(@"SELECT COUNT(*) FROM Tags WHERE FK_PHOTO_ID = @pK_PHOTO_ID", new { pK_PHOTO_ID });
+            result += _db.ExecuteScalar<int>(@"SELECT COUNT(*) FROM TagGroups WHERE FK_PHOTO_ID = @pK_PHOTO_ID", new { pK_PHOTO_ID });
+            return result;
         }
     }
 }

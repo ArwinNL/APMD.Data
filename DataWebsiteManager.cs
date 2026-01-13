@@ -1,5 +1,4 @@
-﻿using Serilog;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace APMD.Data
 {
@@ -50,7 +49,7 @@ namespace APMD.Data
             searchText = Regex.Replace(searchText, @"[-&]", " ");   // replace those chars with space
 
             // Split the search text into individual words
-            words.AddRange(searchText.Split( new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+            words.AddRange(searchText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
             var result = new List<Websites>();
             foreach (var word in words)
             {
@@ -69,7 +68,7 @@ namespace APMD.Data
 
         public void GetWebsiteForModel(Model model)
         {
-            if (model == null )
+            if (model == null)
                 return;
             model.Websites = _websiteRepository.GetByModelId(model.PK_MODEL_ID);
         }
@@ -135,6 +134,11 @@ namespace APMD.Data
         public List<Websites> GetAllWebsitesForModel(Model model)
         {
             return _websiteRepository.GetByModelId(model.PK_MODEL_ID);
+        }
+
+        internal int CountPhoto(long pK_PHOTO_ID)
+        {
+            return _websiteRepository.CountPhoto(pK_PHOTO_ID);
         }
     }
 }
