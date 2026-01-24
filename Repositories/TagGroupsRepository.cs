@@ -1,9 +1,7 @@
-
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data;
 using Dapper;
 using MySqlConnector;
+using System.Collections.ObjectModel;
+using System.Data;
 
 namespace APMD.Data
 {
@@ -36,7 +34,7 @@ namespace APMD.Data
         }
 
         public IEnumerable<TagGroups> GetAll() =>
-            _db.Query<TagGroups>("SELECT * FROM TagGroups");
+            _db.Query<TagGroups>("SELECT * FROM TagGroups WHERE TagGroups.FK_MAIN_TAGGROUP_ID IS NULL");
 
         public ObservableCollection<TagGroups> GetAllFull()
         {
@@ -48,14 +46,14 @@ namespace APMD.Data
             }
             return new ObservableCollection<TagGroups>(groups);
         }
-            
+
 
         public TagGroups? GetById(int id) =>
             _db.QueryFirstOrDefault<TagGroups>("SELECT * FROM TagGroups WHERE PK_TAGGROUP_ID = @id", new { id });
 
         public int Insert(TagGroups item)
         {
-            var id = _db.ExecuteScalar<int> (sql_insert, item);
+            var id = _db.ExecuteScalar<int>(sql_insert, item);
             item.PK_TAGGROUP_ID = id;
             return id;
         }
@@ -69,11 +67,16 @@ namespace APMD.Data
         internal TagGroups? GetFullById(int id)
         {
             var group = _db.QuerySingle<TagGroups>("SELECT * FROM TagGroups WHERE PK_TAGGROUP_ID = @id", new { id });
-            if (group == null) 
+            if (group == null)
                 return null;
             var tags = _tagsRepository.GetAllForGroup(group.PK_TAGGROUP_ID);
             group.Tags = new ObservableCollection<Tag>(tags);
             return group;
+        }
+
+        internal IEnumerable<TagGroups>? GetChildren(int pK_TAGGROUP_ID)
+        {
+            return _db.Query<TagGroups>("SELECT * FROM TagGroups WHERE FK_MAIN_TAGGROUP_ID = @pK_TAGGROUP_ID", new { pK_TAGGROUP_ID });
         }
     }
 }

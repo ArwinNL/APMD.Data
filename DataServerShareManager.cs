@@ -1,5 +1,4 @@
-﻿using APMD.Data;
-using Serilog;
+﻿using Serilog;
 
 namespace APMD.Data
 {
@@ -10,9 +9,9 @@ namespace APMD.Data
         private ServerShareCollection _serverShareCollection;
         private ServerShare _archiveServerShare;
         public ServerShare DefaultServerShare { get; internal set; }
-        public ServerShare ArchiveServerShare 
+        public ServerShare ArchiveServerShare
         {
-            get => _archiveServerShare; 
+            get => _archiveServerShare;
             internal set => _archiveServerShare = value;
         }
         public ServerShare ThumbnailServerShare => DefaultServerShare;
@@ -48,6 +47,11 @@ namespace APMD.Data
         {
             DefaultServerShare = GetServerShare(defaultDisk);
             ArchiveServerShare = GetServerShare(archiveServerShare); // Ensure ArchiveShare is initialized
+        }
+
+        public List<ServerShare> GetAll()
+        {
+            return _serverShareCollection.ServerShares;
         }
     }
 

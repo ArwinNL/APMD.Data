@@ -46,6 +46,7 @@ namespace APMD.Data
                 currentModel.MainModel = null;
             currentModel.Models = GetByICG(currentModel);
             currentModel.Sets = _setsRepository.GetAllForModel(currentModel.PK_MODEL_ID).ToList();
+            currentModel.Sets.ForEach(s => _dataManager.Model.GetAllForSet(s));
             _dataManager.Photo.GetForSets(currentModel.Sets);
             _dataManager.Tag.GetForSets(currentModel.Sets);
             currentModel.Sets.ForEach(s => { s.Models = _dataManager.Model.GetAllForSet(s.PK_SET_ID); });
@@ -95,7 +96,7 @@ namespace APMD.Data
             }
         }
 
-        internal void GetModelsForSet(Set s)
+        public void GetModelsForSet(Set s)
         {
             s.Models = GetAllForSet(s.PK_SET_ID);
         }
@@ -103,6 +104,12 @@ namespace APMD.Data
         internal void GetAllForSet(Set set)
         {
             set.Models = _modelsRepository.GetAllForSet(set.PK_SET_ID);
+            // if model.FK_PHOTO_ID <> -1 then retrieve photo 
+            set.Models.ForEach(m =>
+            {
+                if (m.FK_PHOTO_ID.HasValue && m.FK_PHOTO_ID.Value > 0)
+                    m.ModelPhoto = _dataManager.Photo.GetById(m.FK_PHOTO_ID.Value);
+            });
         }
         internal List<Model> GetAllForSet(long pK_SET_ID)
         {
@@ -189,6 +196,11 @@ namespace APMD.Data
                 else
                     result.AddRange([.. _modelsRepository.SearchOnWord(word)]);
             }
+            result.ForEach(m =>
+            {
+                if (m.FK_PHOTO_ID.HasValue && m.FK_PHOTO_ID.Value > 0)
+                    m.ModelPhoto = _dataManager.Photo.GetById(m.FK_PHOTO_ID.Value);
+            });
             return result.Distinct().ToList(); // Remove duplicates if any
 
         }

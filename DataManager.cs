@@ -1,15 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Dapper;
+using MySqlConnector;
 
 namespace APMD.Data
 {
     public class DataManager
     {
+        private const string sqlFilterSets = @"SELECT DISTINCT s.* FROM Sets s";
+        private const string sqlFilterSetCount = @"SELECT DISTINCT Count(s.PK_SET_ID) FROM Sets s";
+        private const string sqlJoinSetTags = @" LEFT JOIN SetTags st ON st.FK_SET_ID = s.PK_SET_ID";
+        private const string sqlJoinSetModels = @" LEFT JOIN SetModels sm ON sm.FK_SET_ID = s.PK_SET_ID";
+        private const string sqlJoinModels = @" LEFT JOIN Models m ON sm.FK_MODEL_ID = m.PK_MODEL_ID";
+
         private static readonly Serilog.ILogger Log = Serilog.Log.ForContext<DataManager>();
+
+        private static readonly Dictionary<String, String> Filters = new()
+        {
+            { "tag", "st.FK_TAG_ID IN @TagIds" },
+            { "website",  "s.FK_WEBSITE_ID IN @WebsiteIds" },
+            { "model", "m.PK_MODEL_ID IN @ModelIds"    },
+            { "rank", "m.Rank IN @RankIds"    }
+        };
 
         private readonly string _connectionString;
         private readonly DataTagManager _tag;
@@ -76,6 +86,68 @@ namespace APMD.Data
         internal void RollbackTransaction()
         {
         }
+
+
+        public (string sqlSelect, string sqlWhere, object paramsQuery) FilterParameters(Filter currentFilter, string sqlSelect)
+        {
+            var sqlWhere = " WHERE ";
+            var values = new DynamicParameters();
+
+            if (currentFilter.Tags.Count > 0)
+            {
+                sqlSelect += sqlJoinSetTags;
+                sqlWhere += Filters["tag"];
+                values.AddDynamicParams(new { TagIds = currentFilter.TagIds() });
+            }
+            if (currentFilter.Websites.Count > 0)
+            {
+                //sqlSelect += Filters["website"];
+                sqlWhere += currentFilter.Tags.Count > 0 ? (currentFilter.AndWebsite ? " AND " : " OR ") : "";
+                sqlWhere += Filters["website"];
+                values.AddDynamicParams(new { WebsiteIds = currentFilter.WebsiteIds() });
+            }
+            if (currentFilter.Models.Count > 0)
+            {
+                sqlSelect += sqlJoinSetModels;
+                sqlWhere += (currentFilter.Tags.Count > 0 || currentFilter.Websites.Count > 0) ? (currentFilter.AndModel ? " AND " : " OR ") : "";
+                sqlWhere += Filters["model"];
+                values.AddDynamicParams(new { ModelIds = currentFilter.ModelIds() });
+            }
+            if (currentFilter.Ranks.Count > 0)
+            {
+                if (currentFilter.Models.Count < 1)
+                    sqlSelect += sqlJoinSetModels;
+                sqlSelect += sqlJoinModels;
+                sqlWhere += (currentFilter.Tags.Count > 0 || currentFilter.Websites.Count > 0 || currentFilter.Models.Count > 0) ? " AND " : "";
+                sqlWhere += Filters["rank"];
+                values.AddDynamicParams(new { RankIds = currentFilter.RankIds() });
+            }
+            return (sqlSelect, sqlWhere, values);
+        }
+        public List<Set> FilterSets(Filter currentFilter)
+        {
+            var sqlCount = sqlFilterSets;
+            var result = FilterParameters(currentFilter, sqlCount);
+
+            var _db = new MySqlConnection(_connectionString);
+            _db.Open();
+            var resultQuery = _db.Query<Set>(result.sqlSelect + result.sqlWhere, result.paramsQuery);
+            return resultQuery.ToList();
+
+        }
+
+        public string FilterSetsCount(Filter currentFilter)
+        {
+            var sqlCount = sqlFilterSetCount;
+            var result = FilterParameters(currentFilter, sqlCount);
+
+            var _db = new MySqlConnection(_connectionString);
+            _db.Open();
+
+            var resultQuery = _db.ExecuteScalar(result.sqlSelect + result.sqlWhere, result.paramsQuery);
+            return resultQuery?.ToString() ?? "0";
+        }
+
     }
 
     public enum DataAction
@@ -88,7 +160,7 @@ namespace APMD.Data
     public class EventArgsModel
     {
         public DataAction Action { get; set; }
-        public Model Model { get; set;}
+        public Model Model { get; set; }
         public EventArgsModel(Model model, DataAction action)
         {
             Model = model;
@@ -100,10 +172,20 @@ namespace APMD.Data
     {
         public DataAction Action { get; set; }
         public Set Set { get; set; }
-        public EventArgsSet(Set set, DataAction action) 
-        { 
+        public EventArgsSet(Set set, DataAction action)
+        {
             Set = set;
             Action = action;
+        }
+    }
+
+    public class EventArgsSets
+    {
+        public DataAction Action { get; set; }
+        public List<Set> Sets { get; set; }
+        public EventArgsSets(List<Set> sets)
+        {
+            Sets = sets;
         }
     }
 
@@ -123,7 +205,7 @@ namespace APMD.Data
 
     public class ClipboardData
     {
-        public Model? Model { get; set; } 
+        public Model? Model { get; set; }
         public Set? Set { get; set; }
     }
 }

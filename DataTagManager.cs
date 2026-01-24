@@ -111,9 +111,16 @@ namespace APMD.Data
             throw new Exception(msgError);
         }
 
-        public IEnumerable<Tag> AllTagsForGroup(TagGroups tagGroup)
+        public IEnumerable<Object> AllTagsForGroup(TagGroups tagGroup)
         {
-            return _tagsRepository.GetAllForGroup(tagGroup.PK_TAGGROUP_ID);
+            IEnumerable<Object> items = Enumerable.Empty<object>();
+            var result = _tagsRepository.GetAllForGroup(tagGroup.PK_TAGGROUP_ID);
+            var resultTagGroups = _tagGroupsRepository.GetChildren(tagGroup.PK_TAGGROUP_ID);
+            // join the two together
+            items = items.Concat(result);
+            if (resultTagGroups != null)
+                items = items.Concat(resultTagGroups);
+            return items;
         }
 
         internal int CountPhoto(long pK_PHOTO_ID)

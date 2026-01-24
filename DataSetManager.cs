@@ -34,6 +34,7 @@ namespace APMD.Data
                 catch (Exception ex)
                 {
                     Log.Error(ex.Message, ex);
+                    // Show a message box or handle the error as needed
                     throw;
                 }
 
@@ -252,7 +253,9 @@ namespace APMD.Data
 
         public List<Set> GetSetsWithDuplicateItems()
         {
-            return _setsRepository.GetDoubled();
+            var setsWithDuplicates = _setsRepository.GetDoubled();
+            setsWithDuplicates.ForEach(s => _dataManager.Model.GetAllForSet(s));
+            return setsWithDuplicates;
         }
 
         public IEnumerable<Set> GetSetsInRange(long startSetID, long endSetID)
