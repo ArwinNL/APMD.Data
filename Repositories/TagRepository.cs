@@ -232,5 +232,10 @@ namespace APMD.Data
             result += _db.ExecuteScalar<int>(@"SELECT COUNT(*) FROM TagGroups WHERE FK_PHOTO_ID = @pK_PHOTO_ID", new { pK_PHOTO_ID });
             return result;
         }
+
+        internal int DeleteAllForSet(long pK_SET_ID)
+        {
+            return _db.Execute("DELETE FROM SetTags WHERE FK_SET_ID = @pK_SET_ID", new { pK_SET_ID });
+        }
     }
 }

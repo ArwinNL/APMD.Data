@@ -16,7 +16,7 @@ namespace APMD.Data
 
         public List<ImportFolder> GetAll()
         {
-            var import =_importRepository.GetAll();
+            var import = _importRepository.GetAll();
             var result = new List<ImportFolder>();
             import.ForEach(i =>
             {
@@ -56,9 +56,16 @@ namespace APMD.Data
         public void MarkAsProcessed(int pK_IMPORT_ID)
         {
             var import = _importRepository.GetById(pK_IMPORT_ID);
-            import.Processed = true;
-            _importRepository.Update(import);
-            //throw new NotImplementedException();
+            if (import != null)
+            {
+                import.Processed = true;
+                _importRepository.Update(import);
+                //throw new NotImplementedException();
+            }
+            else
+            {
+                Log.Warning("Import with ID {ImportId} not found.", pK_IMPORT_ID);
+            }
         }
 
         public void Insert(Import importSet)

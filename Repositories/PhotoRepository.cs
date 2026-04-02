@@ -122,7 +122,7 @@ namespace APMD.Data
         internal void BulkUpdate(List<Photo> photos)
         {
             foreach (var photo in photos)
-                _db.Update<Photo>(photo);
+                _db.Execute(sql_photo_update, photo);
         }
 
         internal void BulkInsert(List<Photo> photos)

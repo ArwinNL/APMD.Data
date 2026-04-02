@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace APMD.Data
 {
     public class Websites
@@ -6,5 +8,10 @@ namespace APMD.Data
         public required string Name { get; set; }
         public string? Url { get; set; }
         public int? FK_PHOTO_ID { get; set; }
+
+        [ForeignKey("FK_PHOTO_ID")]
+        public Photo? WebsitePhoto { get; set; }
+
+        public int TheNudeId { get; set; }
     }
 }

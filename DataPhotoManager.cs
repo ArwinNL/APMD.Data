@@ -20,7 +20,10 @@
         public Photo? GetById(long value)
         {
             var photo = _photoRepository.GetById(value);
-            photo.ThumbnailServerShare = _dataManager.ServerShare.ThumbnailServerShare;
+            if (photo != null)
+            {
+                photo.ThumbnailServerShare = _dataManager.ServerShare.ThumbnailServerShare;
+            }
             return photo;
         }
 

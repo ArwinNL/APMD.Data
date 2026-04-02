@@ -100,20 +100,18 @@ namespace APMD.Data
 
         internal void DeleteTagsForSet(long pK_SET_ID)
         {
-            var tags = _tagsRepository.GetAllForSet(pK_SET_ID).ToList();
-            int count = 0;
-            tags.ForEach(t => { count += _tagsRepository.Delete(t.PK_TAG_ID); });
-
-            if (count == tags.Count) return;
-
-            var msgError = $"Not all tags have been deleted for set {pK_SET_ID}";
-            Log.Error(msgError);
-            throw new Exception(msgError);
+            var beforeCount = _tagsRepository.GetAllForSet(pK_SET_ID).Count<Tag>();
+            var tags = _tagsRepository.DeleteAllForSet(pK_SET_ID);
+            if (tags != beforeCount)
+            {
+                Log.Warning($"Deleted tags for set {pK_SET_ID}, expected to delete {beforeCount} but deleted {tags}.");
+                throw new InvalidOperationException("Deleted tag count does not match expected count.");
+            }
         }
 
         public IEnumerable<Object> AllTagsForGroup(TagGroups tagGroup)
         {
-            IEnumerable<Object> items = Enumerable.Empty<object>();
+            IEnumerable<Object> items = Enumerable.Empty<Object>();
             var result = _tagsRepository.GetAllForGroup(tagGroup.PK_TAGGROUP_ID);
             var resultTagGroups = _tagGroupsRepository.GetChildren(tagGroup.PK_TAGGROUP_ID);
             // join the two together
