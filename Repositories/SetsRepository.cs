@@ -70,7 +70,8 @@ namespace APMD.Data
                 Archived = @Archived,
                 Tagged = @Tagged,
                 PublishedAt = @PublishedAt,
-                AllPhotosStored = @AllPhotosStored
+                AllPhotosStored = @AllPhotosStored,
+                FK_SR_COVER_ID = @FK_SR_COVER_ID
             WHERE 
                 PK_SET_ID = @PK_SET_ID;
             ";

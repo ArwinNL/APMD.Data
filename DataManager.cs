@@ -1,4 +1,6 @@
-﻿using Dapper;
+﻿using AWSD.Data;
+using Dapper;
+using Microsoft.Extensions.Configuration;
 using MySqlConnector;
 
 namespace APMD.Data
@@ -12,6 +14,7 @@ namespace APMD.Data
         private const string sqlJoinModels = @" LEFT JOIN Models m ON sm.FK_MODEL_ID = m.PK_MODEL_ID";
 
         private static readonly Serilog.ILogger Log = Serilog.Log.ForContext<DataManager>();
+        private static IConfiguration Config;
 
         private static readonly Dictionary<String, String> Filters = new()
         {
@@ -28,6 +31,7 @@ namespace APMD.Data
         private readonly DataSetManager _set;
         private readonly DataServerShareManager _serverShare;
         private readonly DataWebsiteManager _website;
+        private readonly DataSrManager _sr;
         private DataImportManager _import;
 
         public ClipboardData Clipboard { get; set; }
@@ -39,8 +43,10 @@ namespace APMD.Data
         public DataSetManager Set => _set;
         public DataServerShareManager ServerShare => _serverShare;
         public DataWebsiteManager Website => _website;
-
+        public DataSrManager Sr => _sr;
         public DataImportManager Import => _import;
+
+        public DataSrManager SR { get; internal set; }
 
         public delegate void ModelChangeHandler(object sender, EventArgsModel e);
         public event ModelChangeHandler ModelChange;
@@ -48,8 +54,10 @@ namespace APMD.Data
         public delegate void SetChangeHandler(object sender, EventArgsSet e);
         public event SetChangeHandler SetChange;
 
-        public DataManager(string connectionString)
+        public DataManager(string connectionString, IConfiguration config)
         {
+            DbFactory.Initialize(config);
+
             Clipboard = new ClipboardData();
 
             _connectionString = connectionString;
@@ -62,8 +70,12 @@ namespace APMD.Data
             _set = new DataSetManager(this);
             _website = new DataWebsiteManager(this);
             _import = new DataImportManager(this);
+            _sr = new DataSrManager(this);
             ModelChange += (sender, e) => Log.Information($"Model change event triggered: {e.Action} for model {e.Model.Name}");
             SetChange += (sender, e) => Log.Information($"Set change event triggered: {e.Action} for set {e.Set.Title}");
+
+
+
         }
 
         internal void DoModelChange(object sender, EventArgsModel e)

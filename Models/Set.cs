@@ -1,5 +1,7 @@
-using Dapper;
 using System.ComponentModel.DataAnnotations.Schema;
+using AWSD.Entities;
+using AWSD.Models;
+using Dapper;
 using Dapper.Contrib.Extensions;
 
 namespace APMD.Data
@@ -22,7 +24,7 @@ namespace APMD.Data
         public bool Tagged { get; set; }
         public DateTime? PublishedAt { get; set; }
         public bool AllPhotosStored { get; set; }
-
+        public long FK_SR_COVER_ID { get; set; } = -1;
 
         [ForeignKey("FK_PHOTO_ID")]
         public Photo? SetPhoto{ 
@@ -47,6 +49,8 @@ namespace APMD.Data
         [NotMapped]
         public List<Tag> Tags { get; set; } = new List<Tag>();
 
+        [NotMapped]
+        public PhotosetDetails TN_Cover { get; set; }
 
         [NotMapped]
         public Websites? Website 

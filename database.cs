@@ -14,11 +14,15 @@ namespace APMD.Data
                 var cnn = new MySqlConnectionStringBuilder();
                 cnn.Database = "APMD";
                 cnn.UserID = credential.UserName;
-                cnn.Password = "BCOBR5ra9gIHprxsUOXr2iEc6!";//credential.Password;
+                cnn.Password = credential.Password;//credential.Password;
                 //cnn.ApplicationName = credential.ApplicationName;
-                cnn.Server = "MariaDb.home.aran-it.nl";
+                cnn.Server = "192.168.178.5";
+                //cnn.Server = "MariaDb.home.aran-it.nl";
                 //cnn.Server = "127.0.0.1";
                 cnn.Port = 3306;
+                cnn.TreatTinyAsBoolean = true;
+                cnn.AllowUserVariables = true;
+
                 //:/run/mysqld/mysqld10.sock
                 cnnstring = cnn.ToString();
             }

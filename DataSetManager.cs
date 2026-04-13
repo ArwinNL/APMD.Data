@@ -239,6 +239,7 @@ namespace APMD.Data
             _dataManager.Photo.GetAllForSet(currentSet);
             _dataManager.Model.GetAllForSet(currentSet);
             _dataManager.Tag.AllTagsForSet(currentSet);
+            GetCoverDetails(currentSet);
         }
 
         public IEnumerable<Set> Search(string search)
@@ -326,6 +327,12 @@ namespace APMD.Data
                 _dataManager.RollbackTransaction();
                 throw;
             }
+        }
+
+        public void GetCoverDetails(Set currentSet)
+        {
+            if (currentSet.FK_SR_COVER_ID > 0)
+                _dataManager.Sr.GetCoverForSet(currentSet);
         }
     }
 }
