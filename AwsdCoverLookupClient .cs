@@ -1,8 +1,6 @@
-﻿using AWSD.Repositories;
+﻿using AWSD.Data;
 using AWSD.Entities;
-using AWSD.Data;
-using Microsoft.Extensions.Configuration;
-using MySqlConnector;
+using AWSD.Repositories;
 using NPoco;
 
 namespace APMD.Data.Services.Covers;
@@ -31,113 +29,193 @@ public sealed class AwsdCoverSearchResult
     public string? Reason { get; init; }
 }
 
-public sealed class AwsdCoverLookupClient : IAwsdCoverLookupClient
+public sealed class AwsdCoverLookupClient : IAwsdCoverLookupClient, IDisposable
 {
-    private readonly PhotosetRepository _photosetRepo = new();
-    private readonly ModelRepository _modelRepo = new();
-    private readonly WebsiteRepository _websiteRepo = new();
-    private IDatabase db;
-
-    public AwsdCoverLookupClient()
-    {
-        // Initialize DbFactory with connection string from configuration
-        db = DbFactory.Create();
-    }
-
     public async Task<AwsdCoverSearchResult> FindCoverAsync(
         AwsdCoverSearchRequest request,
         CancellationToken cancellationToken = default)
     {
-        // NOTE: NPoco is sync → dus wrap in Task.Run
         return await Task.Run(() =>
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            //var all = _photosetRepo.GetAll();
-            //db = AWSD.Data.DbFactory.Create();
+            using var db = DbFactory.Create();
 
+            var all = new List<PhotosetEntity>();
 
-            var all = db.Fetch<PhotosetEntity>(
-                "SELECT * FROM Photoset WHERE LOWER(Title) LIKE @0 LIMIT 50",
-                $"%{request.Title}%");
-
-            all.AddRange(db.Fetch<PhotosetEntity>(
-                "SELECT * FROM Photoset WHERE LOWER(Models) LIKE @0 LIMIT 50",
-                $"%{request.ModelNames[0]}%"));
-
-            all.AddRange(db.Fetch<PhotosetEntity>(
-                "SELECT * FROM Photoset WHERE Coverdate LIKE @0 LIMIT 50",
-                $"%{request.PublishedAt?.ToString("yyyy-MM-dd")}%"));
-
-        if (all.Count > 0)
+            var normalizedTitle = request.Title.Trim();
+            if (!string.IsNullOrWhiteSpace(normalizedTitle))
             {
-                // 1. Exact title
-                var exact = all.FirstOrDefault(p =>
-                    string.Equals(p.Title, request.Title, StringComparison.OrdinalIgnoreCase));
-
-                if (exact != null)
-                    return Result(exact, "Exact title");
-
-                // 2. Title + date (±1 dag)
-                if (request.PublishedAt.HasValue)
-                {
-                    var dateMatch = all.FirstOrDefault(p =>
-                        string.Equals(p.Title, request.Title, StringComparison.InvariantCultureIgnoreCase) &&
-                        Math.Abs((p.CoverDate - request.PublishedAt.Value).TotalDays) <= 1);
-
-                    if (dateMatch != null)
-                        return Result(dateMatch, "Title + date");
-                }
-
-                // 2.1 Date + model
-                if (request.PublishedAt.HasValue)
-                {
-                    var dateMatchModel = all.FirstOrDefault(p =>
-                        string.Equals(p.Models, request.ModelNames[0], StringComparison.InvariantCultureIgnoreCase) &&
-                        Math.Abs((p.CoverDate - request.PublishedAt.Value).TotalDays) <= 1);
-                    if (dateMatchModel != null)
-                        return Result(dateMatchModel, "Model + date");
-                }
-
-
-            // 3. Title + model overlap
-            if (request.ModelNames.Any())
-                {
-                    var normalizedModels = request.ModelNames
-                        .Select(Normalize)
-                        .ToList();
-
-                    foreach (var p in all)
-                    {
-                        if (!TitleSimilar(p.Title, request.Title))
-                            continue;
-
-                        var modelString = p.Models ?? string.Empty;
-
-                        if (normalizedModels.Any(m =>
-                            Normalize(modelString).Contains(m)))
-                        {
-                            return Result(p, "Title + model match");
-                        }
-                    }
-                }
-
-                // 4. Contains fallback
-                var contains = all.FirstOrDefault(p =>
-                    Normalize(p.Title).Contains(Normalize(request.Title)));
-
-                if (contains != null)
-                    return Result(contains, "Contains fallback");
-
+                all.AddRange(db.Fetch<PhotosetEntity>(@"
+                    SELECT DISTINCT p.*
+                    FROM Photoset p
+                    WHERE LOWER(p.Title) LIKE @0
+                    LIMIT 50",
+                    $"%{normalizedTitle.ToLowerInvariant()}%"));
             }
+
+            if (request.ModelNames != null &&
+                request.ModelNames.Count > 0 &&
+                !string.IsNullOrWhiteSpace(request.ModelNames[0]))
+            {
+                var modelName = request.ModelNames[0].Trim();
+
+                all.AddRange(db.Fetch<PhotosetEntity>(@"
+                    SELECT DISTINCT p.*
+                    FROM Photoset p
+                    INNER JOIN `Photoset-Model` pm ON pm.ID_PHOTOSET = p.ID_PHOTOSET
+                    INNER JOIN Model m ON m.ID_MODEL = pm.ID_MODEL
+                    WHERE LOWER(m.Model) LIKE @0
+                    LIMIT 50",
+                    $"%{modelName.ToLowerInvariant()}%"));
+            }
+
+            if (request.PublishedAt.HasValue)
+            {
+                var date = request.PublishedAt.Value.Date;
+
+                all.AddRange(db.Fetch<PhotosetEntity>(@"
+                    SELECT DISTINCT p.*
+                    FROM Photoset p
+                    WHERE p.CoverDate BETWEEN @0 AND @1
+                    LIMIT 50",
+                    date.AddDays(-1), date.AddDays(1)));
+            }
+
+            if (request.WebsiteId.HasValue)
+            {
+                all.AddRange(db.Fetch<PhotosetEntity>(@"
+                    SELECT DISTINCT p.*
+                    FROM Photoset p
+                    WHERE p.ID_WEBSITE = @0
+                    LIMIT 50",
+                    request.WebsiteId.Value));
+            }
+            else if (!string.IsNullOrWhiteSpace(request.WebsiteName))
+            {
+                all.AddRange(db.Fetch<PhotosetEntity>(@"
+                    SELECT DISTINCT p.*
+                    FROM Photoset p
+                    INNER JOIN Website w ON w.ID_WEBSITE = p.ID_WEBSITE
+                    WHERE LOWER(w.Website) = LOWER(@0)
+                    LIMIT 50",
+                    request.WebsiteName.Trim()));
+            }
+
+            all = all
+                .GroupBy(p => p.Id)
+                .Select(g => g.First())
+                .ToList();
+
+            if (all.Count == 0)
+            {
+                return new AwsdCoverSearchResult
+                {
+                    Found = false,
+                    Reason = "No match"
+                };
+            }
+
+            var modelNames = request.ModelNames?
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(Normalize)
+                .ToList() ?? new List<string>();
+
+            var candidateIdsNeedingModels = all.Select(x => x.Id).ToList();
+            var modelsByPhotosetId = LoadModelsByPhotosetId(db, candidateIdsNeedingModels);
+
+            var exact = all.FirstOrDefault(p =>
+                string.Equals(p.Title, request.Title, StringComparison.OrdinalIgnoreCase));
+
+            if (exact != null)
+                return Result(exact, "Exact title");
+
+            if (request.PublishedAt.HasValue)
+            {
+                var dateMatch = all.FirstOrDefault(p =>
+                    string.Equals(p.Title, request.Title, StringComparison.OrdinalIgnoreCase) &&
+                    Math.Abs((p.CoverDate.Date - request.PublishedAt.Value.Date).TotalDays) <= 1);
+
+                if (dateMatch != null)
+                    return Result(dateMatch, "Title + date");
+            }
+
+            if (request.PublishedAt.HasValue && modelNames.Count > 0)
+            {
+                var dateModelMatch = all.FirstOrDefault(p =>
+                    Math.Abs((p.CoverDate.Date - request.PublishedAt.Value.Date).TotalDays) <= 1 &&
+                    modelsByPhotosetId.TryGetValue(p.Id, out var photoModels) &&
+                    photoModels.Any(pm => modelNames.Contains(Normalize(pm))));
+
+                if (dateModelMatch != null)
+                    return Result(dateModelMatch, "Model + date");
+            }
+
+            if (modelNames.Count > 0)
+            {
+                foreach (var p in all)
+                {
+                    if (!TitleSimilar(p.Title, request.Title))
+                        continue;
+
+                    if (!modelsByPhotosetId.TryGetValue(p.Id, out var photoModels))
+                        continue;
+
+                    var normalizedPhotoModels = photoModels.Select(Normalize).ToList();
+
+                    if (modelNames.Any(m => normalizedPhotoModels.Any(pm => pm.Contains(m) || m.Contains(pm))))
+                        return Result(p, "Title + model match");
+                }
+            }
+
+            var contains = all.FirstOrDefault(p =>
+                Normalize(p.Title).Contains(Normalize(request.Title)));
+
+            if (contains != null)
+                return Result(contains, "Contains fallback");
 
             return new AwsdCoverSearchResult
             {
                 Found = false,
                 Reason = "No match"
             };
-
         }, cancellationToken);
+    }
+
+    private static Dictionary<long, List<string>> LoadModelsByPhotosetId(IDatabase db, IReadOnlyCollection<long> photosetIds)
+    {
+        var result = new Dictionary<long, List<string>>();
+
+        if (photosetIds.Count == 0)
+            return result;
+
+        var sql = @"
+            SELECT pm.ID_PHOTOSET, m.Model
+            FROM `Photoset-Model` pm
+            INNER JOIN Model m ON m.ID_MODEL = pm.ID_MODEL
+            WHERE pm.ID_PHOTOSET IN (@0)";
+
+        var rows = db.Fetch<PhotosetModelRow>(sql, photosetIds.ToArray());
+
+        foreach (var row in rows)
+        {
+            if (!result.TryGetValue(row.ID_PHOTOSET, out var list))
+            {
+                list = new List<string>();
+                result[row.ID_PHOTOSET] = list;
+            }
+
+            if (!string.IsNullOrWhiteSpace(row.Model))
+                list.Add(row.Model);
+        }
+
+        return result;
+    }
+
+    private sealed class PhotosetModelRow
+    {
+        public long ID_PHOTOSET { get; set; }
+        public string Model { get; set; } = string.Empty;
     }
 
     private static AwsdCoverSearchResult Result(PhotosetEntity p, string reason)
@@ -169,6 +247,9 @@ public sealed class AwsdCoverLookupClient : IAwsdCoverLookupClient
         return na.Contains(nb) || nb.Contains(na);
     }
 
+    public void Dispose()
+    {
+    }
     public static int LookupWebsiteId(string name)
     {
         // Lookup website by name (case-insensitive)
@@ -176,8 +257,4 @@ public sealed class AwsdCoverLookupClient : IAwsdCoverLookupClient
         return website;
     }
 
-    public void Cleanup()
-    {
-        db.Dispose();
-    }
 }
