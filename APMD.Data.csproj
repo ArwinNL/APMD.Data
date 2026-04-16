@@ -29,5 +29,7 @@
       <_Parameter1>APMD.Data.Test</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-  <Import Project="..\SharedProjectAWSD\SharedProjectAWSD.projitems" Label="Shared" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\AWSD\AWSD.Data\AWSD.Data.csproj" />
+  </ItemGroup>
 </Project>

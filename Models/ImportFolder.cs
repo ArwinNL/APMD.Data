@@ -1,84 +1,104 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace APMD.Data
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations.Schema;
-    using System.IO;
-
-    // ReSharper disable InconsistentNaming
-    // ReSharper disable PartialTypeWithSinglePart
-
     /// <summary>
-    /// Class voor het importeren van complete folders zonder eerst alle images weer te geven
+    /// Represents a folder to import images from.
+    /// Designed to be serializable and safe for persistence.
     /// </summary>
+    [Serializable] // Optional (only needed for legacy binary serialization)
     public class ImportFolder
     {
         private DirectoryInfo _folder;
-        private Websites? _website;
 
-        public string ImportSetName { get; set; }
+        /// <summary>
+        /// Gets or sets the name of the import set.
+        /// </summary>
+        public string ImportSetName { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the folder path.
+        /// Setting this recreates the internal <see cref="DirectoryInfo"/>.
+        /// </summary>
         public string FolderPath
         {
-            get { return _folder.FullName; }
-            set {
-                _folder = new DirectoryInfo(value); 
-            }
+            get => _folder?.FullName;
+            set => _folder = string.IsNullOrWhiteSpace(value) ? null : new DirectoryInfo(value);
         }
 
+        /// <summary>
+        /// Gets or sets the associated website.
+        /// </summary>
         public Websites? Website { get; set; }
 
+        /// <summary>
+        /// Gets or sets whether this folder should be imported.
+        /// </summary>
         public bool Import { get; set; }
 
+        /// <summary>
+        /// Gets or sets the folder date.
+        /// </summary>
         public DateTime? FolderDate { get; set; }
 
+        /// <summary>
+        /// Gets or sets a user-defined tag (not persisted).
+        /// </summary>
         [NotMapped]
+        [JsonIgnore]
         public object Tag { get; set; }
 
-        public ImportFolder(DirectoryInfo folder)
+        /// <summary>
+        /// Initializes a new empty instance (required for serializers).
+        /// </summary>
+        public ImportFolder()
         {
-            // Assuming Websites is a class with a default constructor
-            _folder = folder;
-            Import = false;
-            ImportSetName = string.Empty;
         }
 
-        public ImportFolder(Import import, Websites website) : this(new DirectoryInfo(import.FullPath))
+        /// <summary>
+        /// Initializes a new instance from a directory.
+        /// </summary>
+        public ImportFolder(DirectoryInfo folder)
+        {
+            _folder = folder ?? throw new ArgumentNullException(nameof(folder));
+            Import = false;
+        }
+
+        /// <summary>
+        /// Initializes from an import source.
+        /// </summary>
+        public ImportFolder(Import import, Websites website)
+            : this(new DirectoryInfo(import.FullPath))
         {
             ImportSetName = import.SetName;
             Import = true;
-            _website = website;
+            Website = website; // FIX: use property, not private field
             FolderDate = import.PublishedAt;
         }
 
-        private List<string> GetFilesToImport()
+        /// <summary>
+        /// Gets all image files that should be imported.
+        /// </summary>
+        public List<string> GetFilesToImport()
         {
-            // 1) Get all files under _folder
-            var allFiles = _folder.GetFiles("*.*", SearchOption.AllDirectories);
+            if (_folder == null || !_folder.Exists)
+                return new List<string>();
 
-            // 2) Define allowed extensions in a HashSet for fast, case‐insensitive lookup
             var allowedExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ".jpg",
-                    ".jpeg",
-                    ".png",
-                    ".gif"
-                };
+            {
+                ".jpg", ".jpeg", ".png", ".gif"
+            };
 
-            // 3) Filter + select FileInfo.FullName and convert to List<string>
-            var filesToImport = allFiles
-                .Where(af => allowedExts.Contains(af.Extension))
-                .Select(af => af.FullName)   // or af.Name if you only want the filename
+            return _folder
+                .GetFiles("*.*", SearchOption.AllDirectories)
+                .Where(f => allowedExts.Contains(f.Extension))
+                .Select(f => f.FullName)
                 .ToList();
-
-            return filesToImport;
         }
     }
-
 }

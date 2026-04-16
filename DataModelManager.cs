@@ -155,6 +155,10 @@ namespace APMD.Data
 
         public void AddToSet(Model clickedModel, Set currentSet)
         {
+            if (currentSet.Models.Exists(m => m.PK_MODEL_ID == clickedModel.PK_MODEL_ID))
+            {
+                throw new Exception($"Model ${clickedModel.Name} (${clickedModel.PK_MODEL_ID} already exists in the set ${currentSet.Title} (${currentSet.PK_SET_ID}).");
+            }
             _setsRepository.AddModelToSet(clickedModel.PK_MODEL_ID, currentSet.PK_SET_ID);
             currentSet.Models.Add(clickedModel);
         }
