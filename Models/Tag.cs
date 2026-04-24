@@ -14,5 +14,6 @@ namespace APMD.Data
 
         [NotMapped]
         public Photo? TagPhoto { get; set; }
+
     }
 }

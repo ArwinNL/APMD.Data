@@ -14,7 +14,7 @@ namespace APMD.Data
     [Serializable] // Optional (only needed for legacy binary serialization)
     public class ImportFolder
     {
-        private DirectoryInfo _folder;
+        private DirectoryInfo? _folder;
 
         /// <summary>
         /// Gets or sets the name of the import set.
@@ -27,7 +27,7 @@ namespace APMD.Data
         /// </summary>
         public string FolderPath
         {
-            get => _folder?.FullName;
+            get => _folder?.FullName ?? string.Empty;
             set => _folder = string.IsNullOrWhiteSpace(value) ? null : new DirectoryInfo(value);
         }
 
@@ -51,7 +51,9 @@ namespace APMD.Data
         /// </summary>
         [NotMapped]
         [JsonIgnore]
-        public object Tag { get; set; }
+        public object? Tag { get; set; } = null;
+
+        public AWSD.Entities.PhotosetEntity? Photoset { get; set; } = null;
 
         /// <summary>
         /// Initializes a new empty instance (required for serializers).
@@ -93,7 +95,6 @@ namespace APMD.Data
             {
                 ".jpg", ".jpeg", ".png", ".gif"
             };
-
             return _folder
                 .GetFiles("*.*", SearchOption.AllDirectories)
                 .Where(f => allowedExts.Contains(f.Extension))
