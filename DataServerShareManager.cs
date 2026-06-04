@@ -7,8 +7,8 @@ namespace APMD.Data
         private DataManager _dataManager;
         private readonly string _connectionString;
         private ServerShareCollection _serverShareCollection;
-        private ServerShare _archiveServerShare;
-        public ServerShare DefaultServerShare { get; internal set; }
+        private ServerShare _archiveServerShare = null!;
+        public ServerShare DefaultServerShare { get; internal set; } = null!;
         public ServerShare ArchiveServerShare
         {
             get => _archiveServerShare;
@@ -31,6 +31,19 @@ namespace APMD.Data
             _dataManager = dataManager;
             _connectionString = dataManager.ConnectionString;
             _serverShareCollection = new ServerShareCollection(_connectionString);
+
+            // Initialize non-nullable members with a fallback
+            if (_serverShareCollection.ServerShares.Count > 0)
+            {
+                DefaultServerShare = _serverShareCollection.ServerShares[0];
+                _archiveServerShare = _serverShareCollection.ServerShares[0];
+            }
+            else
+            {
+                // If no shares, either throw or use null-forgiving assignment
+                DefaultServerShare = null!;  // or throw new InvalidOperationException("No server shares");
+                _archiveServerShare = null!;
+            }
         }
 
         public ServerShare GetServerShare(string serverShare)

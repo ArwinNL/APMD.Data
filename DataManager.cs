@@ -14,7 +14,7 @@ namespace APMD.Data
         private const string sqlJoinModels = @" LEFT JOIN Models m ON sm.FK_MODEL_ID = m.PK_MODEL_ID";
 
         private static readonly Serilog.ILogger Log = Serilog.Log.ForContext<DataManager>();
-        private static IConfiguration Config;
+        //private static IConfiguration Config;
 
         private static readonly Dictionary<String, String> Filters = new()
         {
@@ -46,7 +46,7 @@ namespace APMD.Data
         public DataSrManager Sr => _sr;
         public DataImportManager Import => _import;
 
-        public DataSrManager SR { get; internal set; }
+        public DataSrManager SR { get; internal set; } = null!;
 
         public delegate void ModelChangeHandler(object sender, EventArgsModel e);
         public event ModelChangeHandler ModelChange;
@@ -73,9 +73,6 @@ namespace APMD.Data
             _sr = new DataSrManager(this);
             ModelChange += (sender, e) => Log.Information($"Model change event triggered: {e.Action} for model {e.Model.Name}");
             SetChange += (sender, e) => Log.Information($"Set change event triggered: {e.Action} for set {e.Set.Title}");
-
-
-
         }
 
         internal void DoModelChange(object sender, EventArgsModel e)

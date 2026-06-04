@@ -32,10 +32,16 @@
             if (set.Models == null || set.Models.Count < 1)
                 set.Models = _dataManager.Model.GetAllForSet(set.PK_SET_ID);
 
-            if (set.Models != null && set.Models.Count > 0)
+            if (set.Models != null && set.Models.Count > 0 && set.Models[0] != null)
             {
                 if (set.Models[0].ModelPhoto != null) return set.Models[0].ModelPhoto;
-                if (set.Models[0].FK_PHOTO_ID != null) return GetById(set.Models[0].FK_PHOTO_ID.Value);
+                if (set.Models[0].FK_PHOTO_ID != null)
+                {
+#pragma warning disable CS8629 // Nullable value type may be null.
+                    var modelPhoto = GetById(set.Models[0].FK_PHOTO_ID.Value);
+#pragma warning restore CS8629 // Nullable value type may be null.
+                    return modelPhoto;
+                }
             }
             return null;
         }

@@ -1,8 +1,6 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using AWSD.Entities;
 using AWSD.Models;
-using Dapper;
 using Dapper.Contrib.Extensions;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APMD.Data
 {
@@ -27,18 +25,20 @@ namespace APMD.Data
         public long FK_SR_COVER_ID { get; set; } = -1;
 
         [ForeignKey("FK_PHOTO_ID")]
-        public Photo? SetPhoto{ 
+        public Photo? SetPhoto
+        {
             get
             {
                 if (_setPhoto == null && Photos != null)
                 {
                     _setPhoto = Photos.FirstOrDefault(p => p.PK_PHOTO_ID == FK_PHOTO_ID);
                 }
-                if (_setPhoto != null &&  Archived)
+                if (_setPhoto != null && Archived)
                     _setPhoto.Archived = true;
                 return _setPhoto;
             }
-            set => _setPhoto = value; }
+            set => _setPhoto = value;
+        }
 
         [ForeignKey("FK_SET_ID")]
         public List<Model> Models { get; set; } = new List<Model>();
@@ -53,8 +53,8 @@ namespace APMD.Data
         public PhotosetDetails TN_Cover { get; set; }
 
         [NotMapped]
-        public Websites? Website 
-        { 
+        public Websites? Website
+        {
             get
             {
                 return _website;
@@ -66,7 +66,7 @@ namespace APMD.Data
                 {
                     FK_WEBSITE_ID = value.PK_WEBSITE_ID;
                 }
-            } 
+            }
         }
 
         public Set()

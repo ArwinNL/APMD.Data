@@ -75,7 +75,15 @@ namespace APMD.Data
 
         public void UpdateAll(List<ImportFolder> saveImport)
         {
-            _importRepository.UpdateAll(saveImport.Select(i => (Import)i.Tag).ToList());
+            List<Import> importsToUpdate = saveImport.Where(i => i.Import).Select(i => (Import)i.Tag).ToList();
+            if (importsToUpdate.Count > 0)
+            {
+                _importRepository.UpdateAll(importsToUpdate);
+            }
+            else
+            {
+                Log.Information("No imports to update.");
+            }
         }
     }
 
