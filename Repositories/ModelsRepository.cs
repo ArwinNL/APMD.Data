@@ -194,5 +194,11 @@ namespace APMD.Data
         {
             return db.ExecuteScalar<int>(@"SELECT COUNT(*) FROM Models WHERE FK_PHOTO_ID = @pK_PHOTO_ID", new { pK_PHOTO_ID });
         }
+
+        internal async Task GetCount()
+        {
+            await db.ExecuteScalarAsync<int>(@"SELECT COUNT(*) FROM Models");
+            return;
+        }
     }
 }

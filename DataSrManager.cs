@@ -6,7 +6,7 @@ using NPoco;
 
 namespace APMD.Data
 {
-    public  class DataSrManager
+    public class DataSrManager
     {
         private readonly DataManager _dataManager;
         private readonly IDatabase _db;
@@ -20,9 +20,9 @@ namespace APMD.Data
             _db = DbFactory.Create();
         }
 
-        public PhotosetDetails? GetCoverForSet(Set currentSet)
+        public async Task<PhotosetDetails?> GetCoverForSet(Set currentSet)
         {
-            var result = _photosetRepository.GetDetails(currentSet.FK_SR_COVER_ID);
+            var result = await _photosetRepository.GetDetails(currentSet.FK_SR_COVER_ID);
             currentSet.TN_Cover = result;
             return result;
         }

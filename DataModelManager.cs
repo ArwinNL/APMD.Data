@@ -218,6 +218,12 @@ namespace APMD.Data
         {
             return _modelsRepository.CountPhoto(pK_PHOTO_ID);
         }
+
+        public async Task GetCount()
+        {
+            await _modelsRepository.GetCount();
+            return;
+        }
     }
 
 
