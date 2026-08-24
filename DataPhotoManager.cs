@@ -130,8 +130,28 @@
             {
                 throw new InvalidOperationException("Kan de foto niet verwijderen omdat er referenties zijn naar modellen en/of tags.");
             }
-            if (removeFromSet)
+
+            if (removeFromSet && (photo.FK_SET_ID != null))
             {
+                // Alter the set if needed to remove the photo from the set and update the FK_PHOTO_ID if necessary
+                if (_dataManager.Set.GetById(photo.FK_SET_ID.Value) is Set set)
+                {
+                    if (set.FK_PHOTO_ID == photo.PK_PHOTO_ID)
+                    {
+                        // Set the next photo in the set as the new FK_PHOTO_ID, or null if there are no more photos
+                        var nextPhoto = set.Photos.FirstOrDefault(p => p.PK_PHOTO_ID != photo.PK_PHOTO_ID);
+                        if (nextPhoto != null)
+                        {
+                            set.FK_PHOTO_ID = nextPhoto.PK_PHOTO_ID;
+                        }
+                        else
+                        {
+                            set.FK_PHOTO_ID = null;
+                        }
+                        _dataManager.Set.Update(set);
+                    }
+                }
+                // Remove the photo from the set by setting its FK_SET_ID to null
                 photo.FK_SET_ID = null;
                 _photoRepository.Update(photo);
             }
