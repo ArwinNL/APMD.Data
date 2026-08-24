@@ -1,5 +1,4 @@
-﻿using MySqlConnector;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APMD.Data
 {
@@ -11,11 +10,12 @@ namespace APMD.Data
         public string FullPath { get; set; }
         public bool Processed { get; set; }
         public int FK_WEBSITE_ID { get; set; }
+        public long? FK_SR_COVER_ID { get; set; }
         public DateTime? PublishedAt { get; set; }
         [NotMapped]
         public object Tag { get; set; }
 
-        public Import() 
+        public Import()
         {
             SetName = string.Empty;
             FullPath = string.Empty;
@@ -23,12 +23,16 @@ namespace APMD.Data
             PublishedAt = null;
         }
 
-        public Import(ImportFolder importFolder): this()
+        public Import(ImportFolder importFolder) : this()
         {
             SetName = importFolder.ImportSetName;
             FullPath = importFolder.FolderPath;
             FK_WEBSITE_ID = importFolder.Website?.PK_WEBSITE_ID ?? 0; // Assuming Website is a class with PK_WEBSITE_ID
             PublishedAt = importFolder.FolderDate;
+            if (importFolder.Photoset != null)
+            {
+                FK_SR_COVER_ID = importFolder.Photoset.Id;
+            }
         }
     }
 }
