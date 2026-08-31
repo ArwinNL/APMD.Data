@@ -66,7 +66,7 @@ namespace APMD.Data
                             sm.FK_MODEL_ID = @modelId";
 
         const string sql_tag_select_unique_by_model = @"
-                        SELECT
+                        SELECT UNIQUE
                             t.PK_TAG_ID, t.Name, t.FK_TAGGROUP_ID, t.FK_PHOTO_ID
                         FROM 
                             Models AS m

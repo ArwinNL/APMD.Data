@@ -205,17 +205,29 @@ namespace APMD.Data
             ) x ON x.FK_SET_ID  = s.PK_SET_ID
             SET s.AllPhotosStored = COALESCE(x.NewAllPhotosStored, 1);
             ";
-        private readonly IDbConnection _db;
+        private readonly string _connectionString;
+        private IDbConnection _db;
+        private IDbConnection Db
+        {
+            get
+            {
+                if (_db != null) _db.Dispose();
+                _db = new MySqlConnection(_connectionString);
+                return _db;
+            }
+        }
+
 
         public SetsRepository(string connectionString)
         {
+            _connectionString = connectionString;
             _db = new MySqlConnection(connectionString);
             Dapper.SqlMapper.AddTypeHandler(new SqlDateOnlyTypeHandler());
         }
         internal async Task<IEnumerable<Set>> GetAll()
         {
             //public IEnumerable<Sets> GetAll() =>
-            var sets = await _db.QueryAsync<Set, Model, Websites, Set>(
+            var sets = await Db.QueryAsync<Set, Model, Websites, Set>(
                 sql_set_all,
                 (set, model, website) =>
                 {
@@ -230,7 +242,7 @@ namespace APMD.Data
 
         internal IEnumerable<Set> GetAllForModel(long keyModel)
         {
-            var result = _db.Query<Set>(
+            var result = Db.Query<Set>(
                 sql_for_model,
                 new { keyModel }
             );
@@ -240,7 +252,7 @@ namespace APMD.Data
         internal Set GetById(long id, bool throwExeception = true)
         {
 
-            var result = _db.QueryFirstOrDefault<Set>(sql_set_byid, new { id });
+            var result = Db.QueryFirstOrDefault<Set>(sql_set_byid, new { id });
             if (result == null && throwExeception)
                 throw new KeyNotFoundException($"Set with ID {id} not found.");
             return result;
@@ -261,13 +273,13 @@ namespace APMD.Data
                 parameters.Add("keyModel", keyModel);
             }
 
-            return _db.QueryAsync<ModelStats>(sql.ToString(), parameters);
+            return Db.QueryAsync<ModelStats>(sql.ToString(), parameters);
         }
 
 
         internal long Insert(Set item)
         {
-            item.PK_SET_ID = _db.ExecuteScalar<long>(sql_insert, item);
+            item.PK_SET_ID = Db.ExecuteScalar<long>(sql_insert, item);
             return item.PK_SET_ID;
         }
 
@@ -275,7 +287,7 @@ namespace APMD.Data
         {
             try
             {
-                var result = _db.Execute(sql_update, item);
+                var result = Db.Execute(sql_update, item);
                 if (result == 0)
                 {
                     var msgError = $"Set with ID {item.PK_SET_ID} not updated.";
@@ -290,7 +302,7 @@ namespace APMD.Data
         }
 
         internal long Delete(long id) =>
-            _db.Execute(sql_set_detele, new { id });
+            Db.Execute(sql_set_detele, new { id });
 
 
 
@@ -300,13 +312,13 @@ namespace APMD.Data
             var parameters = new DynamicParameters();
             parameters.Add("@PK_SET_ID", set.PK_SET_ID);
             parameters.Add("@PK_TAG_ID", tag.PK_TAG_ID);
-            _db.Execute(sql_set_insert_tag, parameters);
-            var setTags = _db.QuerySingle<SetTags>(sql_set_get_tag, parameters);
+            Db.Execute(sql_set_insert_tag, parameters);
+            var setTags = Db.QuerySingle<SetTags>(sql_set_get_tag, parameters);
             return setTags;
         }
 
         internal int DeleteReference(int keyTag, long keySet) =>
-            _db.Execute(sql_deletereference, new { FK_SET_ID = keySet, FK_TAG_ID = keyTag });
+            Db.Execute(sql_deletereference, new { FK_SET_ID = keySet, FK_TAG_ID = keyTag });
         internal int DeleteReference(Tag tag, Set currentSet) =>
             DeleteReference(tag.PK_TAG_ID, currentSet.PK_SET_ID);
         internal int DeleteReference(SetTags setTags) =>
@@ -317,7 +329,7 @@ namespace APMD.Data
             var parameters = new DynamicParameters();
             parameters.Add("@FK_SET_ID", pK_SET_ID);
             parameters.Add("@FK_MODEL_ID", pK_MODEL_ID);
-            var result = _db.Execute(sql_set_insert_model, parameters);
+            var result = Db.Execute(sql_set_insert_model, parameters);
             if (result != 1)
                 throw new DataUpdateFailedException($"Addition of model {pK_MODEL_ID} to set {pK_SET_ID} failed");
         }
@@ -327,7 +339,7 @@ namespace APMD.Data
             var parameters = new DynamicParameters();
             parameters.Add("@FK_SET_ID", pK_SET_ID);
             parameters.Add("@FK_MODEL_ID", pK_MODEL_ID);
-            var result = _db.Execute(sql_set_delete_model, parameters);
+            var result = Db.Execute(sql_set_delete_model, parameters);
             if (result != 1)
                 throw new DataUpdateFailedException($"Removall of model {pK_MODEL_ID} from set {pK_SET_ID} failed");
         }
@@ -336,21 +348,21 @@ namespace APMD.Data
         {
             var page = (offset / pageSize) + 1;
 
-            var items = _db.Query<Set>(@"
+            var items = Db.Query<Set>(@"
                 SELECT
                     s.* 
                 FROM 
-                    SetWithoutModels s
+                    SetWithoutTags s
                 ",
                 new { pageSize, offset }
                 );
 
-            int total = _db.ExecuteScalar<int>(
+            int total = Db.ExecuteScalar<int>(
                 @"
                 SELECT 
                     COUNT(*) 
                 FROM 
-                    SetWithoutModels s
+                    SetWithoutTags s
                 ");
 
             return new PagedResult<Set>(items.ToList(), offset, pageSize, total);
@@ -358,7 +370,7 @@ namespace APMD.Data
 
         public List<Set> GetDoubled()
         {
-            var items = _db.Query<Set>(sql_select_double_sets).ToList();
+            var items = Db.Query<Set>(sql_select_double_sets).ToList();
 
             return items;
         }
@@ -376,7 +388,7 @@ namespace APMD.Data
                 ";
             var parameters = new DynamicParameters();
             parameters.Add("search", $"%{search}%");
-            var result = _db.Query<Set>(sql, parameters);
+            var result = Db.Query<Set>(sql, parameters);
             return result;
         }
 
@@ -390,7 +402,7 @@ namespace APMD.Data
                 WHERE 
                     s.Archived = 1
                 ";
-            var result = _db.Query<Set>(sql);
+            var result = Db.Query<Set>(sql);
             return result;
         }
     }
